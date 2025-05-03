@@ -95,7 +95,7 @@ function startConversation() {
 }
 
 
-// Kullanıcı mesaj gönderme fonksiyonu (GÜNCELLENDİ - /carrefoursaxalgida ve ilgili state eklendi)
+// Kullanıcı mesaj gönderme fonksiyonu (GÜNCELLENDİ - Simülasyon yazısı kaldırıldı)
 function sendMessage() {
     const messageText = userInput.value.trim();
 
@@ -140,13 +140,13 @@ function sendMessage() {
                 addBotMessage("İşlem iptal edildi.");
                 conversationState = 'idle';
             }
-        // === YENİ DURUM KONTROLÜ: CarrefourSA/Algida No Beklerken ===
         } else if (conversationState === 'awaiting_carrefour_no') {
-            const enteredNumber = messageText; // Girilen metni numara olarak kabul et (doğrulama yok)
-            // İsteğe bağlı: saveData(CARREFOUR_INFO_KEY, enteredNumber);
-            addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır. (Simülasyon)`);
+            const enteredNumber = messageText;
+            // === SİMÜLASYON YAZISI KALDIRILDI ===
+            addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır.`);
+            // ==================================
             conversationState = 'idle'; // Normal moda dön
-        // ============================================================
+
         } else { // conversationState === 'idle' (Normal sohbet/komut modu)
 
             if (messageText.startsWith('/')) {
@@ -167,14 +167,10 @@ function sendMessage() {
                         addBotMessage("Emin misin? Kayıtlı tüm bilgilerin (isim, sosyal medya, kullanıcı adı) silinecek. Onaylamak için 'Evet' yaz.");
                         conversationState = 'awaiting_reset_confirmation';
                         break;
-                    // === YENİ KOMUT: /carrefoursaxalgida ===
                     case 'carrefoursaxalgida':
-                        // Bu komut için onboarding kontrolünü kaldırıyorum, direkt sorsun.
-                        // İstersen ekleyebiliriz: if (currentUserName && currentSocialMedia && currentSocialUser) { ... } else { ... }
                         addBotMessage("Lütfen CarrefourSA Kart'a kayıtlı GSM numaranızı veya Kart numaranızı girin:");
-                        conversationState = 'awaiting_carrefour_no'; // Numara bekleme moduna geç
+                        conversationState = 'awaiting_carrefour_no';
                         break;
-                    // ====================================
                     default:
                         addBotMessage(`Bilinmeyen komut: "${command}". Yardım için /help yazabilirsin.`);
                 }
@@ -187,7 +183,7 @@ function sendMessage() {
                     addBotMessage("İyiyim, sorduğun için teşekkürler! Sen nasılsın?");
                 }
                 else { // Diğer tüm durumlarda genel cevap
-                    addBotMessage("Şu an sadece belirli komutlara ve selamlaşmalara cevap verebiliyorum. Yardım için /help yazabilirsin."); // Cevabı biraz değiştirdim
+                    addBotMessage("Şu an sadece belirli komutlara ve selamlaşmalara cevap verebiliyorum. Yardım için /help yazabilirsin.");
                 }
             }
         }
