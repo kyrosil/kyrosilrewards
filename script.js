@@ -15,13 +15,17 @@ const CARREFOUR_EU_KEY = 'kyrosil_carrefourEu';
 const TIKTAK_GSM_KEY = 'kyrosil_tiktakGsm';
 const TRENDYOL_EMAIL_KEY = 'kyrosil_trendyolEmail';
 
+// Google Gemini API Ayarları
+const GEMINI_API_KEY = 'AIzaSyDKAlH4qmyd2m-qQ9Bx6DvMFvkvNs74cts'; // !!! KENDİ ANAHTARINI BURAYA YAPIŞTIR !!!
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY;
+
 // Konuşma durumunu takip etmek için değişken
 let conversationState = 'idle';
 
 // İzin verilen sosyal medya platformları
 const allowedSocialMedia = ['instagram', 'eu portal', 'x', 'tiktok'];
 
-// --- localStorage Fonksiyonları (Değişiklik yok) ---
+// --- localStorage Fonksiyonları ---
 function saveData(key, value) { try { localStorage.setItem(key, value); console.log(`localStorage'a kaydedildi: ${key} = ${value}`); } catch (e) { console.error("localStorage'a kaydederken hata oluştu:", e); } }
 function loadData(key) { try { const data = localStorage.getItem(key); return data; } catch (e) { console.error("localStorage'dan okurken hata oluştu:", e); return null; } }
 function removeData(key) { try { localStorage.removeItem(key); console.log(`localStorage'dan silindi: ${key}`); } catch (e) { console.error("localStorage'dan silerken hata oluştu:", e); } }
@@ -31,8 +35,6 @@ function removeAllSponsorData() { removeData(TK_MILES_KEY); removeData(MAVI_GSM_
 let currentUserName = loadData(USER_NAME_KEY);
 let currentSocialMedia = loadData(SOCIAL_MEDIA_KEY);
 let currentSocialUser = loadData(SOCIAL_USER_KEY);
-// Sponsor verilerini de yükleyelim (bilgilerim komutu için)
-let currentTkMiles, currentMaviGsm, currentCarrefoursaInfo, currentSwissairNo, currentCarrefourEu, currentTiktakGsm, currentTrendyolEmail; // /bilgilerim içinde yüklenecek
 
 // Mesajı sohbet kutusuna ekleyen yardımcı fonksiyon
 function addMessageToChatBox(text, messageClass) { const messageElement = document.createElement('div'); messageElement.classList.add('message', messageClass); const paragraph = document.createElement('p'); paragraph.textContent = text; messageElement.appendChild(paragraph); chatBox.appendChild(messageElement); scrollToBottom(); }
@@ -43,10 +45,9 @@ function addBotMessage(text, delay = 600) { setTimeout(() => { addMessageToChatB
 // Sohbet kutusunu en alta kaydıran yardımcı fonksiyon
 function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
 
-// Konuşmayı başlatan veya devam ettiren fonksiyon (GÜNCELLENDİ - Karşılama mesajları)
+// Konuşmayı başlatan veya devam ettiren fonksiyon (GÜNCELLENDİ - /rewards ipucu eklendi)
 function startConversation() {
     if (!currentUserName) {
-        // === YENİ İLK KARŞILAMA MESAJI ===
         addBotMessage("Avrupa'nın sponsor markalarla ilk ve tek tam entegre yapay zeka botu KyrosilRewards'a hoş geldin! ✨ Seninle tanışmak istiyorum, adın nedir?", 100);
         conversationState = 'awaiting_name';
     } else if (!currentSocialMedia) {
@@ -56,107 +57,65 @@ function startConversation() {
         addBotMessage(`Harika, ${currentSocialMedia} üzerinden takip etmene sevindim! Oradaki kullanıcı adın nedir?`, 100);
         conversationState = 'awaiting_username';
     } else {
-        // === YENİ "TEKRAR HOŞ GELDİN" MESAJI ===
-        addBotMessage(`Tekrar hoş geldin, ${currentUserName}! Harika işbirlikleri ve ödüller için hazırsan, sponsor kayıt komutlarını görmek için /sponsor-kayit yazabilirsin. Diğer komutlar için /help her zaman yanında. Ya da sadece sohbet edelim!`, 100);
+        // === GÜNCELLENMİŞ "TEKRAR HOŞ GELDİN" MESAJI ===
+        addBotMessage(`Tekrar hoş geldin, ${currentUserName}! Mevcut ödül fırsatları için /rewards, sponsor kayıtları için /sponsor-kayit yazabilirsin. Diğer komutlar için /help her zaman yanında. Ya da sadece sohbet edelim!`, 100);
         conversationState = 'idle';
     }
     setTimeout(scrollToBottom, 150);
 }
 
+// === Gemini API Fonksiyonu ===
+async function getGeminiResponse(prompt) { /* ... önceki kod ... */ }
+async function getGeminiResponse(prompt){addBotMessage("...",100);const payload={contents:[{parts:[{"text":prompt}]}]};try{if(!GEMINI_API_KEY||GEMINI_API_KEY==='SENIN_API_ANAHTARIN_BURAYA'){throw new Error("API Anahtarı ayarlanmamış veya geçersiz.")}const response=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!response.ok){const errorData=await response.json();throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message||response.statusText}`)}const data=await response.json();let botReply="Üzgünüm, bir cevap alamadım.";if(data.candidates&&data.candidates.length>0&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts.length>0){botReply=data.candidates[0].content.parts[0].text}else if(data.promptFeedback&&data.promptFeedback.blockReason){botReply=`İçerik güvenlik nedeniyle engellendi: ${data.promptFeedback.blockReason}`;console.error("API İçerik Engeli:",data.promptFeedback)}else{console.error("Beklenmeyen API cevap formatı:",data)}const thinkingMessage=chatBox.querySelector('.bot-message:last-child');if(thinkingMessage&&thinkingMessage.textContent==="...") {thinkingMessage.querySelector('p').textContent=botReply}else{addMessageToChatBox(botReply,'bot-message')}scrollToBottom()}catch(error){console.error("Gemini API isteği başarısız:",error);addBotMessage(`Üzgünüm, şu an sana cevap veremiyorum. Hata: ${error.message}`);const thinkingMessage=chatBox.querySelector('.bot-message:last-child');if(thinkingMessage&&thinkingMessage.textContent==="...") {thinkingMessage.remove()}}}
 
-// Kullanıcı mesaj gönderme fonksiyonu (GÜNCELLENDİ - Simülasyon yazıları kaldırıldı)
+
+// Kullanıcı mesaj gönderme fonksiyonu (GÜNCELLENDİ - /rewards komutu eklendi)
 function sendMessage() {
     const messageText = userInput.value.trim();
-
     if (messageText !== "") {
         addMessageToChatBox(messageText, 'user-message');
         userInput.value = '';
 
-        // Konuşma durumuna göre işle
-        if (conversationState === 'awaiting_name') {
-            currentUserName = messageText; saveData(USER_NAME_KEY, currentUserName); startConversation();
-        } else if (conversationState === 'awaiting_social') {
-            const lowerCaseInput = messageText.toLowerCase();
-            if (allowedSocialMedia.includes(lowerCaseInput)) { currentSocialMedia = lowerCaseInput; saveData(SOCIAL_MEDIA_KEY, currentSocialMedia); startConversation(); }
-            else { addBotMessage("Lütfen listedeki platformlardan birini yazar mısın? (Instagram, EU Portal, X, Tiktok)"); }
-        } else if (conversationState === 'awaiting_username') {
-            currentSocialUser = messageText; saveData(SOCIAL_USER_KEY, currentSocialUser); addBotMessage(`Teşekkürler ${currentUserName}! Tüm bilgilerin kaydedildi.`); startConversation(); // Bu mesajdan sonra startConversation tekrar çağrılarak yeni hoşgeldin mesajı gösterilecek.
-        } else if (conversationState === 'awaiting_reset_confirmation') {
-            const lowerCaseInput = messageText.toLowerCase();
-            if (lowerCaseInput === 'evet') {
-                removeData(USER_NAME_KEY); removeData(SOCIAL_MEDIA_KEY); removeData(SOCIAL_USER_KEY); removeAllSponsorData();
-                currentUserName = null; currentSocialMedia = null; currentSocialUser = null;
-                addBotMessage("Tüm kayıtlı bilgilerin (tanışma ve sponsor) silindi."); conversationState = 'idle';
-                setTimeout(startConversation, 800); // Bilgiler silindikten sonra tanışmayı yeniden başlat
-            } else { addBotMessage("İşlem iptal edildi."); conversationState = 'idle'; }
+        // State handling (onboarding, reset, sponsor info)
+        if (conversationState !== 'idle') {
+            // Bu bloklarda değişiklik yok...
+            if(conversationState==='awaiting_name'){currentUserName=messageText;saveData(USER_NAME_KEY,currentUserName);startConversation()}else if(conversationState==='awaiting_social'){const lci=messageText.toLowerCase();if(allowedSocialMedia.includes(lci)){currentSocialMedia=lci;saveData(SOCIAL_MEDIA_KEY,currentSocialMedia);startConversation()}else{addBotMessage("Lütfen listedeki platformlardan birini yazar mısın? (Instagram, EU Portal, X, Tiktok)")}}else if(conversationState==='awaiting_username'){currentSocialUser=messageText;saveData(SOCIAL_USER_KEY,currentSocialUser);addBotMessage(`Teşekkürler ${currentUserName}! Tüm bilgilerin kaydedildi.`);startConversation()}else if(conversationState==='awaiting_reset_confirmation'){const lci=messageText.toLowerCase();if(lci==='evet'){removeData(USER_NAME_KEY);removeData(SOCIAL_MEDIA_KEY);removeData(SOCIAL_USER_KEY);removeAllSponsorData();currentUserName=null;currentSocialMedia=null;currentSocialUser=null;addBotMessage("Tüm kayıtlı bilgilerin (tanışma ve sponsor) silindi.");conversationState='idle';setTimeout(startConversation,800)}else{addBotMessage("İşlem iptal edildi.");conversationState='idle'}}else if(conversationState==='awaiting_tk_no'){const tkNo=messageText;saveData(TK_MILES_KEY,tkNo);currentTkMiles=tkNo;addBotMessage(`Miles&Smiles (${tkNo}) kaydınız alındı. Özel teklifler için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_mavi_gsm'){const maviGsm=messageText;saveData(MAVI_GSM_KEY,maviGsm);currentMaviGsm=maviGsm;addBotMessage(`Mavi Kartuş (${maviGsm}) GSM kaydınız alındı. Kampanyalardan haberdar edileceksiniz!`);conversationState='idle'}else if(conversationState==='awaiting_carrefoursa_info'){const csInfo=messageText;saveData(CARREFOURSA_INFO_KEY,csInfo);currentCarrefoursaInfo=csInfo;addBotMessage(`CarrefourSA (${csInfo}) bilginiz kaydedildi. İlgili kampanyalar hakkında bilgi verilecek!`);conversationState='idle'}else if(conversationState==='awaiting_swissair_no'){const swissNo=messageText;saveData(SWISSAIR_NO_KEY,swissNo);currentSwissairNo=swissNo;addBotMessage(`Swiss Air (${swissNo}) yolcu programı kaydınız alındı. Uçuşlarınızda başarılar!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_eu'){const cEuNo=messageText;saveData(CARREFOUR_EU_KEY,cEuNo);currentCarrefourEu=cEuNo;addBotMessage(`Carrefour Avrupa (${cEuNo}) kart bilginiz kaydedildi. Bölgesel kampanyalar için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_tiktak_gsm'){const tiktakGsm=messageText;saveData(TIKTAK_GSM_KEY,tiktakGsm);currentTiktakGsm=tiktakGsm;addBotMessage(`TikTak (${tiktakGsm}) GSM kaydınız alındı. Kullanımlarınızda bol şans!`);conversationState='idle'}else if(conversationState==='awaiting_trendyol_email'){const trendyolMail=messageText;saveData(TRENDYOL_EMAIL_KEY,trendyolMail);currentTrendyolEmail=trendyolMail;addBotMessage(`Trendyol (${trendyolMail}) e-posta adresiniz kaydedildi. Özel indirimler için hesabınızı kontrol edin!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_no'){const enteredNumber=messageText;addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır.`);conversationState='idle'}
 
-        // === Sponsor State Handler'lar (Simülasyon yazıları kaldırıldı) ===
-        } else if (conversationState === 'awaiting_tk_no') {
-            const tkNo = messageText; saveData(TK_MILES_KEY, tkNo); currentTkMiles = tkNo;
-            addBotMessage(`Miles&Smiles (${tkNo}) kaydınız alındı. Özel teklifler için takipte kalın!`); conversationState = 'idle';
-        } else if (conversationState === 'awaiting_mavi_gsm') {
-            const maviGsm = messageText; saveData(MAVI_GSM_KEY, maviGsm); currentMaviGsm = maviGsm;
-            addBotMessage(`Mavi Kartuş (${maviGsm}) GSM kaydınız alındı. Kampanyalardan haberdar edileceksiniz!`); conversationState = 'idle';
-        } else if (conversationState === 'awaiting_carrefoursa_info') {
-            const csInfo = messageText; saveData(CARREFOURSA_INFO_KEY, csInfo); currentCarrefoursaInfo = csInfo;
-            addBotMessage(`CarrefourSA (${csInfo}) bilginiz kaydedildi. İlgili kampanyalar hakkında bilgi verilecek!`); conversationState = 'idle';
-        } else if (conversationState === 'awaiting_swissair_no') {
-            const swissNo = messageText; saveData(SWISSAIR_NO_KEY, swissNo); currentSwissairNo = swissNo;
-            addBotMessage(`Swiss Air (${swissNo}) yolcu programı kaydınız alındı. Uçuşlarınızda başarılar!`); conversationState = 'idle';
-        } else if (conversationState === 'awaiting_carrefour_eu') {
-            const cEuNo = messageText; saveData(CARREFOUR_EU_KEY, cEuNo); currentCarrefourEu = cEuNo;
-            addBotMessage(`Carrefour Avrupa (${cEuNo}) kart bilginiz kaydedildi. Bölgesel kampanyalar için takipte kalın!`); conversationState = 'idle';
-        } else if (conversationState === 'awaiting_tiktak_gsm') {
-            const tiktakGsm = messageText; saveData(TIKTAK_GSM_KEY, tiktakGsm); currentTiktakGsm = tiktakGsm;
-            addBotMessage(`TikTak (${tiktakGsm}) GSM kaydınız alındı. Kullanımlarınızda bol şans!`); conversationState = 'idle';
-        } else if (conversationState === 'awaiting_trendyol_email') {
-            const trendyolMail = messageText; saveData(TRENDYOL_EMAIL_KEY, trendyolMail); currentTrendyolEmail = trendyolMail;
-            addBotMessage(`Trendyol (${trendyolMail}) e-posta adresiniz kaydedildi. Özel indirimler için hesabınızı kontrol edin!`); conversationState = 'idle';
-        } else if (conversationState === 'awaiting_carrefour_no') { // Bu carrefoursaxalgida içindi
-            const enteredNumber = messageText;
-            addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır.`); // Simülasyon yazısı kaldırıldı
-            conversationState = 'idle';
-        // ============================================================
-
-        } else { // conversationState === 'idle' (Normal sohbet/komut modu)
+        } else { // conversationState === 'idle'
             if (messageText.startsWith('/')) {
                 const command = messageText.substring(1).toLowerCase().trim();
                 switch (command) {
                     case 'help':
-                        addBotMessage("Kullanılabilir Komutlar:\n/help - Bu yardım mesajı.\n/bilgilerim - Kayıtlı temel ve sponsor bilgilerini gösterir.\n/reset - Tüm kayıtlı bilgileri siler.\n/sponsor-kayit - Sponsor kayıt komutlarını listeler.");
+                        addBotMessage("Kullanılabilir Komutlar:\n/help - Bu yardım mesajı.\n/bilgilerim - Kayıtlı bilgileri gösterir.\n/reset - Tüm kayıtlı bilgileri siler.\n/sponsor-kayit - Sponsor kayıt komutlarını listeler.\n/rewards - Aktif ödül fırsatlarını gösterir."); // /rewards eklendi
                         break;
                     case 'sponsor-kayit':
-                         addBotMessage("Sponsor Kayıt Komutları:\n" +
-                                      "/turkishairlines - Miles&Smiles No Kaydı\n" +
-                                      "/mavi - Mavi Kartuş GSM Kaydı\n" +
-                                      "/carrefoursa - CarrefourSA Kart/GSM Kaydı\n" +
-                                      "/swissair - Swiss Air Yolcu No Kaydı\n" +
-                                      "/carrefour - Carrefour Avrupa Kart Kaydı\n" +
-                                      "/tiktak - TikTak GSM Kaydı\n" +
-                                      "/trendyol - Trendyol E-posta Kaydı");
-                        break;
+                         addBotMessage("Sponsor Kayıt Komutları:\n/turkishairlines - M&S No\n/mavi - Mavi GSM\n/carrefoursa - C.SA Kart/GSM\n/swissair - Swiss Air No\n/carrefour - C. EU Kart\n/tiktak - TikTak GSM\n/trendyol - Trendyol E-posta");
+                         break;
+                    // === YENİ KOMUT: /rewards ===
+                    case 'rewards':
+                         let rewardsText = "Aktif Ödül Fırsatları (Simülasyon):\n";
+                         rewardsText += "- CarrefourSA & Algida: 300TL Puan (Katılım: /carrefoursaxalgida)\n";
+                         rewardsText += "- Miles&Smiles: Özel THY Teklifleri (Kayıt: /turkishairlines)\n";
+                         rewardsText += "- Mavi Kartuş: Özel İndirimler (Kayıt: /mavi)\n";
+                         // Diğer sponsorlar için de benzer satırlar eklenebilir
+                         rewardsText += "Daha fazla bilgi ve katılım için ilgili komutu kullanın.";
+                         addBotMessage(rewardsText);
+                         break;
+                     // ===========================
                     case 'bilgilerim':
+                        currentUserName = loadData(USER_NAME_KEY); currentSocialMedia = loadData(SOCIAL_MEDIA_KEY); currentSocialUser = loadData(SOCIAL_USER_KEY);
                         currentTkMiles = loadData(TK_MILES_KEY); currentMaviGsm = loadData(MAVI_GSM_KEY); currentCarrefoursaInfo = loadData(CARREFOURSA_INFO_KEY);
                         currentSwissairNo = loadData(SWISSAIR_NO_KEY); currentCarrefourEu = loadData(CARREFOUR_EU_KEY); currentTiktakGsm = loadData(TIKTAK_GSM_KEY);
                         currentTrendyolEmail = loadData(TRENDYOL_EMAIL_KEY);
                         let info = "--- Temel Bilgilerin ---\n";
-                        info += `İsim: ${currentUserName || 'Kaydedilmemiş'}\n`;
-                        info += `Platform: ${currentSocialMedia || 'Kaydedilmemiş'}\n`;
-                        info += `Kullanıcı Adı: ${currentSocialUser || 'Kaydedilmemiş'}\n`;
+                        info += `İsim: ${currentUserName || '-'}\n`; info += `Platform: ${currentSocialMedia || '-'}\n`; info += `K.Adı: ${currentSocialUser || '-'}\n`;
                         info += "--- Sponsor Kayıtların ---\n";
-                        info += `Turkish Airlines (M&S): ${currentTkMiles || '-'}\n`;
-                        info += `Mavi (GSM): ${currentMaviGsm || '-'}\n`;
-                        info += `CarrefourSA (Kart/GSM): ${currentCarrefoursaInfo || '-'}\n`;
-                        info += `Swiss Air (Yolcu No): ${currentSwissairNo || '-'}\n`;
-                        info += `Carrefour EU (Kart): ${currentCarrefourEu || '-'}\n`;
-                        info += `TikTak (GSM): ${currentTiktakGsm || '-'}\n`;
-                        info += `Trendyol (E-posta): ${currentTrendyolEmail || '-'}`;
+                        info += `THY (M&S): ${currentTkMiles || '-'}\n`; info += `Mavi (GSM): ${currentMaviGsm || '-'}\n`; info += `C.SA (Kart/GSM): ${currentCarrefoursaInfo || '-'}\n`;
+                        info += `Swiss Air (No): ${currentSwissairNo || '-'}\n`; info += `C. EU (Kart): ${currentCarrefourEu || '-'}\n`; info += `TikTak (GSM): ${currentTiktakGsm || '-'}\n`;
+                        info += `Trendyol (Mail): ${currentTrendyolEmail || '-'}`;
                         addBotMessage(info);
                         break;
-                    case 'reset':
-                        addBotMessage("Emin misin? Kayıtlı tüm bilgilerin (tanışma ve sponsor) silinecek. Onaylamak için 'Evet' yaz.");
-                        conversationState = 'awaiting_reset_confirmation';
-                        break;
+                    case 'reset': addBotMessage("Emin misin? Kayıtlı tüm bilgilerin (tanışma ve sponsor) silinecek. Onaylamak için 'Evet' yaz."); conversationState = 'awaiting_reset_confirmation'; break;
                     case 'turkishairlines': addBotMessage("Lütfen Miles&Smiles üyelik numaranızı (TK ile başlayan) girin:"); conversationState = 'awaiting_tk_no'; break;
                     case 'mavi': addBotMessage("Lütfen Mavi Kartuş Kart'a kayıtlı GSM numaranızı girin:"); conversationState = 'awaiting_mavi_gsm'; break;
                     case 'carrefoursa': addBotMessage("Lütfen CarrefourSA kart numaranızı veya kayıtlı GSM numaranızı girin:"); conversationState = 'awaiting_carrefoursa_info'; break;
@@ -173,10 +132,10 @@ function sendMessage() {
                 if (lowerCaseInput === 'merhaba' || lowerCaseInput === 'selam') { addBotMessage(`Merhaba ${currentUserName || ''}!`); }
                 else if (lowerCaseInput === 'naber' || lowerCaseInput === 'nasılsın') { addBotMessage("İyiyim, sorduğun için teşekkürler! Sen nasılsın?"); }
                 else {
-                    if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'AIzaSyDKAlH4qmyd2m-qQ9Bx6DvMFvkvNs74cts') {
+                    if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_API_ANAHTARIN_BURAYA') {
                          getGeminiResponse(messageText);
                     } else {
-                         addBotMessage("Şu an sadece belirli komutlara ve selamlaşmalara cevap verebiliyorum ama komutları kullanabilirsin: /help, /sponsor-kayit");
+                         addBotMessage("Şu an sadece belirli komutlara ve selamlaşmalara cevap verebiliyorum ama komutları kullanabilirsin: /help, /sponsor-kayit, /rewards"); // /rewards eklendi
                     }
                 }
             }
@@ -184,11 +143,7 @@ function sendMessage() {
     }
 }
 
-// === Gemini API Fonksiyonu (Değişiklik Yok) ===
-async function getGeminiResponse(prompt) { /* ... önceki kod ... */ }
-async function getGeminiResponse(prompt){addBotMessage("...",100);const payload={contents:[{parts:[{"text":prompt}]}]};try{const response=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!response.ok){const errorData=await response.json();throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message||response.statusText}`)}const data=await response.json();let botReply="Üzgünüm, bir cevap alamadım.";if(data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]){botReply=data.candidates[0].content.parts[0].text}else{console.error("Beklenmeyen API cevap formatı:",data)}const thinkingMessage=chatBox.querySelector('.bot-message:last-child');if(thinkingMessage&&thinkingMessage.textContent==="...") {thinkingMessage.querySelector('p').textContent=botReply}else{addMessageToChatBox(botReply,'bot-message')}scrollToBottom()}catch(error){console.error("Gemini API isteği başarısız:",error);addBotMessage("Üzgünüm, şu an sana cevap veremiyorum. Bir hata oluştu.")}}
-
-// Gönder butonuna ve Enter tuşuna olay dinleyicileri (Değişiklik yok)
+// Gönder butonuna ve Enter tuşuna olay dinleyicileri
 sendButton.addEventListener('click', sendMessage);
 userInput.addEventListener('keypress', function(event) { if (event.key === 'Enter') { sendMessage(); } });
 
