@@ -9,22 +9,7 @@ const SOCIAL_MEDIA_KEY = 'kyrosil_socialMedia';
 const SOCIAL_USER_KEY = 'kyrosil_socialUser';
 
 // === YENİ: Google Gemini API Ayarları ===
-const GEMINI_API_KEY = '
-image_e0c5a4
-
-PNG
-image_e0c907
-
-PNG
-image_e0d82b
-
-PNG
-
-
-
-
-
-AIzaSyDKAlH4qmyd2m-qQ9Bx6DvMFvkvNs74cts'; // !!! KENDİ ANAHTARINI BURAYA YAPIŞTIR !!!
+const GEMINI_API_KEY = 'AIzaSyDKAlH4qmyd2m-qQ9Bx6DvMFvkvNs74cts'; // !!! KENDİ ANAHTARINI BURAYA YAPIŞTIR !!!
 // Model adı değişebilir (örn: 'gemini-pro'). Gemini dokümantasyonuna veya AI Studio'ya bak.
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY; 
 // =======================================
