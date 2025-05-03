@@ -3,34 +3,41 @@ const chatBox = document.getElementById('chat-box');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-button');
 
-// Mesaj gönderme fonksiyonu
+// Kullanıcı mesaj gönderme fonksiyonu
 function sendMessage() {
-    // Kullanıcının girdiği metni alıyoruz (başındaki/sonundaki boşlukları temizleyerek)
     const messageText = userInput.value.trim();
 
-    // Mesaj boş değilse devam et
     if (messageText !== "") {
-        // Yeni bir mesaj elementi oluştur (kullanıcı mesajı olarak)
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', 'user-message'); // Hem genel hem kullanıcı stili
-        
-        const paragraph = document.createElement('p');
-        paragraph.textContent = messageText; // Paragrafın içeriğini kullanıcının mesajı yap
-        messageElement.appendChild(paragraph); // Paragrafı mesaj elementine ekle
+        // Kullanıcı mesajını ekle
+        addMessageToChatBox(messageText, 'user-message');
+        userInput.value = ''; // Input'u temizle
 
-        // Oluşturulan mesaj elementini sohbet kutusuna ekle
-        chatBox.appendChild(messageElement);
-
-        // Sohbet kutusunu en alta kaydır
-        scrollToBottom();
-
-        // Yazı yazma kutusunu temizle
-        userInput.value = '';
-
-        // --- BOT CEVABI İÇİN GELECEK KOD BURAYA EKLENEBİLİR ---
-        // Şimdilik bot cevap vermiyor.
-        // generateBotResponse(messageText); // Örneğin sonra böyle bir fonksiyon çağırabiliriz
+        // Bot'un cevap vermesi için küçük bir gecikme ekleyelim
+        setTimeout(generateBotResponse, 600); // 600 milisaniye (0.6 saniye) sonra cevap ver
     }
+}
+
+// Bot'un cevap üretme fonksiyonu (şimdilik sabit cevap)
+function generateBotResponse() {
+    // Burada daha sonra komutları veya yapay zekayı işleyebiliriz.
+    // Şimdilik sabit bir cevap verelim:
+    const botReply = "Mesajınızı aldım!"; 
+    
+    // Bot mesajını ekle
+    addMessageToChatBox(botReply, 'bot-message');
+}
+
+// Mesajı sohbet kutusuna ekleyen yardımcı fonksiyon
+function addMessageToChatBox(text, messageClass) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', messageClass); 
+    
+    const paragraph = document.createElement('p');
+    paragraph.textContent = text; 
+    messageElement.appendChild(paragraph); 
+
+    chatBox.appendChild(messageElement);
+    scrollToBottom(); // Her mesaj eklendiğinde en alta kaydır
 }
 
 // Sohbet kutusunu en alta kaydıran yardımcı fonksiyon
@@ -43,11 +50,10 @@ sendButton.addEventListener('click', sendMessage);
 
 // Yazı kutusundayken Enter tuşuna basıldığında sendMessage fonksiyonunu çalıştır
 userInput.addEventListener('keypress', function(event) {
-    // Enter tuşunun kodu 13'tür
     if (event.key === 'Enter') {
         sendMessage();
     }
 });
 
-// Sayfa ilk yüklendiğinde de en alta kaydır (eğer başta mesajlar varsa)
+// Sayfa ilk yüklendiğinde de en alta kaydır
 scrollToBottom();
