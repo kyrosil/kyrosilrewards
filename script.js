@@ -241,7 +241,7 @@ function sendMessage() {
                 else if (lowerCaseInput === 'naber' || lowerCaseInput === 'nasılsın') { addBotMessage("İyiyim, sorduğun için teşekkürler! Sen nasılsın?"); }
                 else { 
                     // API Anahtarı varsa Gemini'yi çağır, yoksa standart cevap ver
-                    if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_API_ANAHTARIN_BURAYA') {
+                    if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'AIzaSyDKAlH4qmyd2m-qQ9Bx6DvMFvkvNs74cts') {
                          getGeminiResponse(messageText); 
                     } else {
                          addBotMessage("Şu an genel sohbete cevap veremiyorum ama komutları kullanabilirsin: /help, /sponsor-kayit"); 
