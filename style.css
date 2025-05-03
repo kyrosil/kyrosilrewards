@@ -25,14 +25,13 @@ body {
     overflow: hidden; 
 }
 
-/* === YENİ EKLENEN STİL: Üst Logo === */
+/* Üst Logo Stili */
 #header-logo {
     display: block; /* Ortalamak için */
-    height: 40px; /* Yüksekliğini ayarla (isteğe bağlı) */
+    height: 55px; /* Yüksekliği biraz artırdık (Deneme) */
     width: auto; /* Genişlik otomatik */
-    margin: 15px auto 10px auto; /* Üst, alt boşluk ve ortala */
+    margin: 15px auto 15px auto; /* Üst, alt boşluk ve ortala */
 }
-/* =================================== */
 
 /* Mesajların görüneceği alan */
 #chat-box {
@@ -43,13 +42,13 @@ body {
     border-bottom: 1px solid #eee; 
 }
 
-/* Genel mesaj stilleri */
+/* Genel mesaj stilleri (Hizalama güncellendi) */
 .message {
     margin-bottom: 15px;
-    max-width: 85%; /* Genişliği biraz artırdık */
+    max-width: 85%; 
     line-height: 1.4;
-    display: flex; /* Logoyu ve metni yan yana getirmek için */
-    align-items: flex-start; /* Dikeyde yukarı hizala */
+    display: flex; 
+    align-items: center; /* Dikeyde ortala (flex-start yerine) */
 }
 
 /* Bot mesajlarının stilleri */
@@ -59,19 +58,18 @@ body {
     margin-right: auto; 
 }
 
-/* === YENİ EKLENEN STİL: Bot Mesaj Logosu === */
+/* Bot Mesaj Logosu Stili (Boyut güncellendi) */
 .message.bot-message::before {
     content: url('indir.png'); /* Logo dosyasını göster */
     display: inline-block;
-    width: 30px;  /* Logo boyutu */
-    height: 30px; /* Logo boyutu */
+    width: 35px;  /* Boyutu biraz artırdık (Deneme) */
+    height: 35px; /* Boyutu biraz artırdık (Deneme) */
     border-radius: 50%; /* Yuvarlak yapmak için (isteğe bağlı) */
-    margin-right: 8px; /* Metinle arasına boşluk */
+    margin-right: 10px; /* Boşluğu biraz artırdık */
     flex-shrink: 0; /* Küçülmesini engelle */
 }
-/* ======================================== */
 
-/* Bot mesajı paragrafı (logo ile hizalamak için) */
+/* Bot mesajı paragrafı */
 .message.bot-message p {
     margin: 0;
     background-color: #e5e5ea; 
@@ -89,6 +87,7 @@ body {
     margin-left: auto; 
     border-radius: 18px; /* Kullanıcı mesajına da yuvarlaklık */
     padding: 10px 15px; /* İç boşluk */
+    /* Flex-box'ı burada kullanmadığımız için display:flex'e gerek yok */
 }
 
 .message.user-message p {
