@@ -1,1 +1,97 @@
+/* Sayfanın genel stilleri */
+body {
+    font-family: sans-serif; /* Daha modern bir yazı tipi */
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4; /* Hafif gri arka plan */
+    display: flex; /* İçeriği ortalamak için */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Sayfanın en az tüm yüksekliği kaplaması */
+}
 
+/* Sohbet kutusunun ana taşıyıcısı */
+#chat-container {
+    width: 90%;
+    max-width: 600px; /* Maksimum genişlik */
+    height: 80vh; /* Yüksekliği ekranın %80'i kadar */
+    max-height: 700px; /* Maksimum yükseklik */
+    background-color: #fff; /* Beyaz arka plan */
+    border-radius: 8px; /* Köşeleri yuvarlatma */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Hafif gölge */
+    display: flex;
+    flex-direction: column; /* İçeriği dikey sırala */
+    overflow: hidden; /* Taşmaları engelle */
+}
+
+/* Mesajların görüneceği alan */
+#chat-box {
+    flex-grow: 1; /* Mümkün olduğunca alanı kapla */
+    padding: 15px;
+    overflow-y: auto; /* Dikey kaydırma çubuğu (gerektiğinde) */
+    border-bottom: 1px solid #eee; /* Alt alanı ayırmak için çizgi */
+}
+
+/* Genel mesaj stilleri */
+.message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 18px; /* Baloncuk görünümü */
+    max-width: 75%; /* Maksimum genişlik */
+    line-height: 1.4;
+}
+
+/* Bot mesajlarının stilleri */
+.message.bot-message {
+    background-color: #e5e5ea; /* Bot için gri tonu */
+    color: #000;
+    align-self: flex-start; /* Sola yasla */
+    margin-right: auto; /* Sağa boşluk bırak */
+}
+
+/* Kullanıcı mesajlarının stilleri (henüz JS eklemediğimiz için görünmeyecek) */
+.message.user-message {
+    background-color: #007bff; /* Kullanıcı için mavi */
+    color: #fff;
+    align-self: flex-end; /* Sağa yasla */
+    margin-left: auto; /* Sola boşluk bırak */
+}
+
+/* Mesaj içindeki paragrafın alt boşluğunu sıfırla */
+.message p {
+    margin: 0;
+}
+
+/* Yazı yazma alanı */
+#input-area {
+    display: flex; /* Input ve butonu yan yana getir */
+    padding: 10px;
+    background-color: #f9f9f9; /* Hafif farklı arka plan */
+}
+
+/* Yazı yazma kutusu */
+#user-input {
+    flex-grow: 1; /* Alanın çoğunu kapla */
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 20px; /* Yuvarlak kenarlar */
+    margin-right: 10px;
+    font-size: 1rem;
+}
+
+/* Gönder butonu */
+#send-button {
+    padding: 10px 20px;
+    background-color: #007bff; /* Mavi buton */
+    color: white;
+    border: none;
+    border-radius: 20px; /* Yuvarlak kenarlar */
+    cursor: pointer; /* Üzerine gelince el işareti */
+    font-size: 1rem;
+    transition: background-color 0.2s ease; /* Renk değişimi efekti */
+}
+
+/* Buton üzerine gelince rengi biraz koyulaştır */
+#send-button:hover {
+    background-color: #0056b3;
+}
