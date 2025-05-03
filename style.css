@@ -2,20 +2,20 @@
 body {
     font-family: sans-serif; 
     margin: 0;
-    padding: 20px; /* Üst/alt boşluk ekleyelim */
+    padding: 20px; 
     background-color: #f4f4f4; 
     display: flex; 
     justify-content: center;
     align-items: center;
     min-height: 100vh; 
-    box-sizing: border-box; /* Padding hesaba katılsın */
+    box-sizing: border-box; 
 }
 
 /* Sohbet kutusunun ana taşıyıcısı */
 #chat-container {
     width: 90%;
     max-width: 600px; 
-    height: 85vh; /* Yüksekliği biraz artırdık */
+    height: 85vh; 
     max-height: 750px; 
     background-color: #fff; 
     border-radius: 8px; 
@@ -27,10 +27,20 @@ body {
 
 /* Üst Logo Stili */
 #header-logo {
-    display: block; /* Ortalamak için */
-    height: 55px; /* Yüksekliği biraz artırdık (Deneme) */
-    width: auto; /* Genişlik otomatik */
-    margin: 15px auto 15px auto; /* Üst, alt boşluk ve ortala */
+    display: block; 
+    height: 55px; 
+    width: auto; 
+    margin: 15px auto 10px auto; /* Alt boşluğu azalttık başlık için */
+}
+
+/* Başlık Stili */
+#chat-title {
+    text-align: center;
+    font-size: 1.4em; 
+    color: #333;
+    margin-top: 0; 
+    margin-bottom: 15px;
+    font-weight: 600;
 }
 
 /* Mesajların görüneceği alan */
@@ -38,7 +48,7 @@ body {
     flex-grow: 1; 
     padding: 15px;
     overflow-y: auto; 
-    border-top: 1px solid #eee; /* Üstteki logodan ayırmak için */
+    border-top: 1px solid #eee; 
     border-bottom: 1px solid #eee; 
 }
 
@@ -48,7 +58,7 @@ body {
     max-width: 85%; 
     line-height: 1.4;
     display: flex; 
-    align-items: center; /* Dikeyde ortala (flex-start yerine) */
+    align-items: center; /* Dikeyde ortala */
 }
 
 /* Bot mesajlarının stilleri */
@@ -58,15 +68,20 @@ body {
     margin-right: auto; 
 }
 
-/* Bot Mesaj Logosu Stili (Boyut güncellendi) */
+/* Bot Mesaj Logosu Stili (Arka Plan Resmi olarak) */
 .message.bot-message::before {
-    content: url('indir.png'); /* Logo dosyasını göster */
+    content: ''; /* İçerik boş olmalı ama ::before gerekli */
     display: inline-block;
-    width: 35px;  /* Boyutu biraz artırdık (Deneme) */
-    height: 35px; /* Boyutu biraz artırdık (Deneme) */
-    border-radius: 50%; /* Yuvarlak yapmak için (isteğe bağlı) */
-    margin-right: 10px; /* Boşluğu biraz artırdık */
-    flex-shrink: 0; /* Küçülmesini engelle */
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-image: url('indir.png'); /* Logoyu arka plan yap */
+    background-size: contain;       /* İçine sığdır */
+    background-repeat: no-repeat;   /* Tekrarlama */
+    background-position: center center; /* Ortala */
+    margin-right: 10px;
+    flex-shrink: 0;
+    /* border: 1px solid #ddd; */ /* İsteğe bağlı: logonun yerini görmek için kenarlık */
 }
 
 /* Bot mesajı paragrafı */
@@ -75,7 +90,7 @@ body {
     background-color: #e5e5ea; 
     padding: 10px 15px;
     border-radius: 18px; 
-    word-break: break-word; /* Uzun kelimeler varsa satır atla */
+    word-break: break-word; 
 }
 
 
@@ -85,9 +100,8 @@ body {
     color: #fff;
     align-self: flex-end; 
     margin-left: auto; 
-    border-radius: 18px; /* Kullanıcı mesajına da yuvarlaklık */
-    padding: 10px 15px; /* İç boşluk */
-    /* Flex-box'ı burada kullanmadığımız için display:flex'e gerek yok */
+    border-radius: 18px; 
+    padding: 10px 15px; 
 }
 
 .message.user-message p {
