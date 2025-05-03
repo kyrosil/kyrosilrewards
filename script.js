@@ -7,9 +7,10 @@ const sendButton = document.getElementById('send-button');
 const USER_NAME_KEY = 'kyrosil_userName';
 const SOCIAL_MEDIA_KEY = 'kyrosil_socialMedia';
 const SOCIAL_USER_KEY = 'kyrosil_socialUser';
+// const CARREFOUR_INFO_KEY = 'kyrosil_carrefourInfo'; // İstersek numarayı da kaydedebiliriz
 
 // Konuşma durumunu takip etmek için değişken
-let conversationState = 'idle'; // Olası durumlar: 'idle', 'awaiting_name', 'awaiting_social', 'awaiting_username', 'awaiting_reset_confirmation'
+let conversationState = 'idle'; // Olası durumlar: 'idle', 'awaiting_name', 'awaiting_social', 'awaiting_username', 'awaiting_reset_confirmation', 'awaiting_carrefour_no'
 
 // İzin verilen sosyal medya platformları
 const allowedSocialMedia = ['instagram', 'eu portal', 'x', 'tiktok'];
@@ -18,7 +19,7 @@ const allowedSocialMedia = ['instagram', 'eu portal', 'x', 'tiktok'];
 function saveData(key, value) {
     try {
         localStorage.setItem(key, value);
-        console.log(`localStorage'a kaydedildi: ${key} = ${value}`); 
+        console.log(`localStorage'a kaydedildi: ${key} = ${value}`);
     } catch (e) {
         console.error("localStorage'a kaydederken hata oluştu:", e);
     }
@@ -28,23 +29,22 @@ function saveData(key, value) {
 function loadData(key) {
     try {
         const data = localStorage.getItem(key);
-        return data; 
+        return data;
     } catch (e) {
         console.error("localStorage'dan okurken hata oluştu:", e);
         return null;
     }
 }
 
-// === YENİ: localStorage'dan veri silme fonksiyonu ===
+// localStorage'dan veri silme fonksiyonu
 function removeData(key) {
      try {
         localStorage.removeItem(key);
-        console.log(`localStorage'dan silindi: ${key}`); 
+        console.log(`localStorage'dan silindi: ${key}`);
     } catch (e) {
         console.error("localStorage'dan silerken hata oluştu:", e);
     }
 }
-// ====================================================
 
 // Sayfa yüklendiğinde mevcut verileri yükle
 let currentUserName = loadData(USER_NAME_KEY);
@@ -54,14 +54,14 @@ let currentSocialUser = loadData(SOCIAL_USER_KEY);
 // Mesajı sohbet kutusuna ekleyen yardımcı fonksiyon
 function addMessageToChatBox(text, messageClass) {
     const messageElement = document.createElement('div');
-    messageElement.classList.add('message', messageClass); 
-    
+    messageElement.classList.add('message', messageClass);
+
     const paragraph = document.createElement('p');
-    paragraph.textContent = text; 
-    messageElement.appendChild(paragraph); 
+    paragraph.textContent = text;
+    messageElement.appendChild(paragraph);
 
     chatBox.appendChild(messageElement);
-    scrollToBottom(); 
+    scrollToBottom();
 }
 
 // Bot mesajı ekleme ve gecikme fonksiyonu
@@ -78,9 +78,8 @@ function scrollToBottom() {
 
 // Konuşmayı başlatan veya devam ettiren fonksiyon
 function startConversation() {
-    // Eğer localStorage boşsa veya isim yoksa onboarding başlar
     if (!currentUserName) {
-        addBotMessage("Merhaba! Ben Kyrosilrewards botuyum. Seninle tanışmak istiyorum, adın nedir?", 100); 
+        addBotMessage("Merhaba! Ben Kyrosilrewards botuyum. Seninle tanışmak istiyorum, adın nedir?", 100);
         conversationState = 'awaiting_name';
     } else if (!currentSocialMedia) {
         addBotMessage(`Tekrar merhaba ${currentUserName}! Bizi hangi sosyal medya platformundan takip ediyorsun? (Instagram, EU Portal, X, Tiktok)`, 100);
@@ -90,42 +89,42 @@ function startConversation() {
         conversationState = 'awaiting_username';
     } else {
         addBotMessage(`Merhaba ${currentUserName}, tekrar hoş geldin! Kullanılabilir komutlar için /help yazabilirsin.`, 100);
-        conversationState = 'idle'; 
+        conversationState = 'idle';
     }
-    setTimeout(scrollToBottom, 150); 
+    setTimeout(scrollToBottom, 150);
 }
 
 
-// Kullanıcı mesaj gönderme fonksiyonu (GÜNCELLENDİ - Komutlar eklendi)
+// Kullanıcı mesaj gönderme fonksiyonu (GÜNCELLENDİ - /carrefoursaxalgida ve ilgili state eklendi)
 function sendMessage() {
     const messageText = userInput.value.trim();
 
     if (messageText !== "") {
         addMessageToChatBox(messageText, 'user-message');
-        userInput.value = ''; 
+        userInput.value = '';
 
         // Konuşma durumuna göre işle
         if (conversationState === 'awaiting_name') {
-            currentUserName = messageText; 
-            saveData(USER_NAME_KEY, currentUserName); 
-            startConversation(); // Bir sonraki adımı sor/başlat
-        
+            currentUserName = messageText;
+            saveData(USER_NAME_KEY, currentUserName);
+            startConversation();
+
         } else if (conversationState === 'awaiting_social') {
             const lowerCaseInput = messageText.toLowerCase();
             if (allowedSocialMedia.includes(lowerCaseInput)) {
-                currentSocialMedia = lowerCaseInput; 
-                saveData(SOCIAL_MEDIA_KEY, currentSocialMedia); 
-                startConversation(); // Bir sonraki adımı sor/başlat
+                currentSocialMedia = lowerCaseInput;
+                saveData(SOCIAL_MEDIA_KEY, currentSocialMedia);
+                startConversation();
             } else {
                 addBotMessage("Lütfen listedeki platformlardan birini yazar mısın? (Instagram, EU Portal, X, Tiktok)");
             }
 
         } else if (conversationState === 'awaiting_username') {
-            currentSocialUser = messageText; 
-            saveData(SOCIAL_USER_KEY, currentSocialUser); 
+            currentSocialUser = messageText;
+            saveData(SOCIAL_USER_KEY, currentSocialUser);
             addBotMessage(`Teşekkürler ${currentUserName}! Tüm bilgilerin kaydedildi.`);
-            startConversation(); // Normal moda geç ve hoş geldin de
-        
+            startConversation();
+
         } else if (conversationState === 'awaiting_reset_confirmation') {
             const lowerCaseInput = messageText.toLowerCase();
             if (lowerCaseInput === 'evet') {
@@ -137,22 +136,25 @@ function sendMessage() {
                 currentSocialUser = null;
                 addBotMessage("Tüm kayıtlı bilgilerin silindi.");
                 conversationState = 'idle';
-                // İsteğe bağlı olarak tekrar tanışma başlatılabilir:
-                // setTimeout(startConversation, 800); 
             } else {
                 addBotMessage("İşlem iptal edildi.");
                 conversationState = 'idle';
             }
-
+        // === YENİ DURUM KONTROLÜ: CarrefourSA/Algida No Beklerken ===
+        } else if (conversationState === 'awaiting_carrefour_no') {
+            const enteredNumber = messageText; // Girilen metni numara olarak kabul et (doğrulama yok)
+            // İsteğe bağlı: saveData(CARREFOUR_INFO_KEY, enteredNumber);
+            addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır. (Simülasyon)`);
+            conversationState = 'idle'; // Normal moda dön
+        // ============================================================
         } else { // conversationState === 'idle' (Normal sohbet/komut modu)
-            
-            // === YENİ: Komutları işle ===
+
             if (messageText.startsWith('/')) {
-                const command = messageText.substring(1).toLowerCase().trim(); // / işaretini at, küçük harfe çevir
+                const command = messageText.substring(1).toLowerCase().trim();
 
                 switch (command) {
                     case 'help':
-                        addBotMessage("Kullanılabilir Komutlar:\n/help - Bu yardım mesajını gösterir.\n/bilgilerim - Kayıtlı bilgilerini gösterir.\n/reset - Kayıtlı bilgilerini siler.");
+                        addBotMessage("Kullanılabilir Komutlar:\n/help - Bu yardım mesajını gösterir.\n/bilgilerim - Kayıtlı bilgilerini gösterir.\n/reset - Kayıtlı bilgilerini siler.\n/carrefoursaxalgida - CarrefourSA & Algida kampanyasına katılım.");
                         break;
                     case 'bilgilerim':
                         let info = "Kayıtlı Bilgilerin:\n";
@@ -163,25 +165,29 @@ function sendMessage() {
                         break;
                     case 'reset':
                         addBotMessage("Emin misin? Kayıtlı tüm bilgilerin (isim, sosyal medya, kullanıcı adı) silinecek. Onaylamak için 'Evet' yaz.");
-                        conversationState = 'awaiting_reset_confirmation'; // Onay bekleme moduna geç
+                        conversationState = 'awaiting_reset_confirmation';
                         break;
+                    // === YENİ KOMUT: /carrefoursaxalgida ===
+                    case 'carrefoursaxalgida':
+                        // Bu komut için onboarding kontrolünü kaldırıyorum, direkt sorsun.
+                        // İstersen ekleyebiliriz: if (currentUserName && currentSocialMedia && currentSocialUser) { ... } else { ... }
+                        addBotMessage("Lütfen CarrefourSA Kart'a kayıtlı GSM numaranızı veya Kart numaranızı girin:");
+                        conversationState = 'awaiting_carrefour_no'; // Numara bekleme moduna geç
+                        break;
+                    // ====================================
                     default:
                         addBotMessage(`Bilinmeyen komut: "${command}". Yardım için /help yazabilirsin.`);
                 }
-            } 
-            // ============================
-            
-            // Komut değilse, temel selamlaşmaları kontrol et
-            else {
+            }
+            else { // Komut değilse normal sohbet
                 const lowerCaseInput = messageText.toLowerCase();
                 if (lowerCaseInput === 'merhaba' || lowerCaseInput === 'selam') {
-                    addBotMessage(`Merhaba ${currentUserName || ''}!`); 
+                    addBotMessage(`Merhaba ${currentUserName || ''}!`);
                 } else if (lowerCaseInput === 'naber' || lowerCaseInput === 'nasılsın') {
                     addBotMessage("İyiyim, sorduğun için teşekkürler! Sen nasılsın?");
-                } 
-                // Diğer tüm durumlarda genel cevap
-                else {
-                    addBotMessage("Mesajınızı aldım!"); 
+                }
+                else { // Diğer tüm durumlarda genel cevap
+                    addBotMessage("Şu an sadece belirli komutlara ve selamlaşmalara cevap verebiliyorum. Yardım için /help yazabilirsin."); // Cevabı biraz değiştirdim
                 }
             }
         }
