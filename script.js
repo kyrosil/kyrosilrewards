@@ -15,10 +15,10 @@ const CARREFOUR_EU_KEY = 'kyrosil_carrefourEu';
 const TIKTAK_GSM_KEY = 'kyrosil_tiktakGsm';
 const TRENDYOL_EMAIL_KEY = 'kyrosil_trendyolEmail';
 
-// === Google Gemini API Ayarları (gemini-pro / v1 ile) ===
+// === Google Gemini API Ayarları (Gemini 2.0 Flash / v1beta ile) ===
 const GEMINI_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // !!! YENİ ANAHTARINI BURAYA YAPIŞTIR !!!
-const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY;
-// =====================================================
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
+// ===========================================================
 
 // Konuşma durumunu takip etmek için değişken
 let conversationState = 'idle';
@@ -61,7 +61,7 @@ async function getGeminiResponse(prompt) {
     const payload = { contents: [{ parts: [{"text": prompt}] }] };
     try {
          if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_API_ANAHTARIN_BURAYA') { throw new Error("API Anahtarı ayarlanmamış veya geçersiz."); }
-         // API_URL artık gemini-pro ve v1 içeriyor
+         // API_URL artık gemini-2.0-flash ve v1beta içeriyor
         const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) { const errorData = await response.json(); throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`); }
         const data = await response.json();
@@ -97,9 +97,9 @@ function sendMessage() {
                 // Komut işleme
                 const command = messageText.substring(1).toLowerCase().trim();
                 switch (command) {
-                    case 'help': addBotMessage("Kullanılabilir Komutlar:\n/help - Bu yardım mesajı.\n/bilgilerim - Kayıtlı bilgileri gösterir.\n/reset - Tüm kayıtlı bilgileri siler.\n/sponsor-kayit - Sponsor kayıt komutlarını listeler.\n/rewards - Aktif ödül fırsatlarını gösterir."); break;
-                    case 'sponsor-kayit': addBotMessage("Sponsor Kayıt Komutları:\n/turkishairlines - M&S No\n/mavi - Mavi GSM\n/carrefoursa - C.SA Kart/GSM\n/swissair - Swiss Air No\n/carrefour - C. EU Kart\n/tiktak - TikTak GSM\n/trendyol - Trendyol E-posta"); break;
-                    case 'rewards': let rewardsText = "Aktif Ödül Fırsatı:\n"; rewardsText += "- CarrefourSA & Algida: 300TL Değerinde Puan Fırsatı! (Detay ve katılım için: /carrefoursaxalgida)"; addBotMessage(rewardsText); break;
+                    case 'help': addBotMessage("Kullanılabilir Komutlar:\n/help - Yardım.\n/bilgilerim - Bilgilerini gösterir.\n/reset - Bilgilerini siler.\n/sponsor-kayit - Sponsor komutları.\n/rewards - Ödül fırsatları."); break; // Kısaltıldı
+                    case 'sponsor-kayit': addBotMessage("Sponsor Kayıtları:\n/turkishairlines - M&S No\n/mavi - Mavi GSM\n/carrefoursa - C.SA Kart/GSM\n/swissair - Swiss Air No\n/carrefour - C. EU Kart\n/tiktak - TikTak GSM\n/trendyol - Trendyol E-posta"); break;
+                    case 'rewards': let rewardsText = "Aktif Ödül Fırsatı:\n"; rewardsText += "- CarrefourSA & Algida: 300TL Puan Fırsatı! (/carrefoursaxalgida)"; addBotMessage(rewardsText); break;
                     case 'bilgilerim':
                         currentUserName = loadData(USER_NAME_KEY); currentSocialMedia = loadData(SOCIAL_MEDIA_KEY); currentSocialUser = loadData(SOCIAL_USER_KEY);
                         currentTkMiles = loadData(TK_MILES_KEY); currentMaviGsm = loadData(MAVI_GSM_KEY); currentCarrefoursaInfo = loadData(CARREFOURSA_INFO_KEY);
@@ -132,7 +132,7 @@ function sendMessage() {
                 else {
                     // API Anahtarı varsa Gemini'yi çağır
                     if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_API_ANAHTARIN_BURAYA') {
-                         getGeminiResponse(messageText); // Gemini fonksiyonunu çağırıyoruz
+                         getGeminiResponse(messageText);
                     } else {
                          addBotMessage("Şu an sadece belirli komutlara ve selamlaşmalara cevap verebiliyorum ama komutları kullanabilirsin: /help, /sponsor-kayit, /rewards");
                     }
@@ -141,6 +141,7 @@ function sendMessage() {
         }
     }
 }
+
 
 // Gönder butonuna ve Enter tuşuna olay dinleyicileri
 sendButton.addEventListener('click', sendMessage);
