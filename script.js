@@ -15,13 +15,10 @@ const CARREFOUR_EU_KEY = 'kyrosil_carrefourEu';
 const TIKTAK_GSM_KEY = 'kyrosil_tiktakGsm';
 const TRENDYOL_EMAIL_KEY = 'kyrosil_trendyolEmail';
 
-// Hugging Face API Ayarları
-const HF_TOKEN = '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'; // !!! KENDİ hf_... TOKEN'INI BURAYA YAPIŞTIR !!!
-// === MODEL ADI GÜNCELLENDİ (Daha küçük Gemma modeli) ===
-const HF_MODEL_ID = 'google/gemma-2b-it'; // Önceki 'mistralai/Mistral-7B-Instruct-v0.2' idi
+// === Google Gemini API Ayarları (gemini-pro / v1 ile) ===
+const GEMINI_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // !!! YENİ ANAHTARINI BURAYA YAPIŞTIR !!!
+const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY;
 // =====================================================
-const HF_API_URL = `https://api-inference.huggingface.co/models/${HF_MODEL_ID}`;
-
 
 // Konuşma durumunu takip etmek için değişken
 let conversationState = 'idle';
@@ -58,33 +55,31 @@ function startConversation() {
     setTimeout(scrollToBottom, 150);
 }
 
-// Hugging Face API Fonksiyonu
-async function getHuggingFaceResponse(prompt) {
+// Gemini API Fonksiyonu
+async function getGeminiResponse(prompt) {
     addBotMessage("...", 100);
-    const payload = { inputs: prompt, parameters: { max_new_tokens: 250, temperature: 0.7, return_full_text: false } };
+    const payload = { contents: [{ parts: [{"text": prompt}] }] };
     try {
-        if (!HF_TOKEN || HF_TOKEN === 'SENIN_HF_TOKENIN_BURAYA') { throw new Error("Hugging Face Token ayarlanmamış veya geçersiz."); }
-        const response = await fetch(HF_API_URL, { method: 'POST', headers: { 'Authorization': `Bearer ${HF_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (!response.ok) {
-             if (response.status === 503) { addBotMessage("Model şu an yükleniyor, lütfen birkaç saniye sonra tekrar deneyin...", 0); const thinkingMsg = chatBox.querySelector('.bot-message:last-child'); if (thinkingMsg && thinkingMsg.textContent === "...") { thinkingMsg.remove(); } return; }
-            const errorData = await response.json(); throw new Error(`API Hatası: ${response.status} - ${errorData?.error || response.statusText}`);
-        }
+         if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_API_ANAHTARIN_BURAYA') { throw new Error("API Anahtarı ayarlanmamış veya geçersiz."); }
+         // API_URL artık gemini-pro ve v1 içeriyor
+        const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!response.ok) { const errorData = await response.json(); throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`); }
         const data = await response.json();
         let botReply = "Üzgünüm, bir cevap alamadım.";
-        if (Array.isArray(data) && data.length > 0 && data[0].generated_text) { botReply = data[0].generated_text.trim(); }
-        else { console.error("Beklenmeyen API cevap formatı (Hugging Face):", data); }
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) { botReply = data.candidates[0].content.parts[0].text; }
+        else if (data.promptFeedback && data.promptFeedback.blockReason){ botReply = `İçerik güvenlik nedeniyle engellendi: ${data.promptFeedback.blockReason}`; console.error("API İçerik Engeli:", data.promptFeedback); }
+        else { console.error("Beklenmeyen API cevap formatı:", data); }
         const thinkingMessage = chatBox.querySelector('.bot-message:last-child');
         if (thinkingMessage && thinkingMessage.textContent === "...") { thinkingMessage.querySelector('p').textContent = botReply; }
         else { addMessageToChatBox(botReply, 'bot-message'); }
         scrollToBottom();
     } catch (error) {
-        console.error("Hugging Face API isteği başarısız:", error);
+        console.error("Gemini API isteği başarısız:", error);
         addBotMessage(`Üzgünüm, şu an sana cevap veremiyorum. Hata: ${error.message}`);
         const thinkingMessage = chatBox.querySelector('.bot-message:last-child');
         if (thinkingMessage && thinkingMessage.textContent === "...") { thinkingMessage.remove(); }
     }
 }
-
 
 // Kullanıcı mesaj gönderme fonksiyonu
 function sendMessage() {
@@ -95,7 +90,7 @@ function sendMessage() {
 
         // State handling (onboarding, reset, sponsor info)
         if (conversationState !== 'idle') {
-            if(conversationState==='awaiting_name'){currentUserName=messageText;saveData(USER_NAME_KEY,currentUserName);startConversation()}else if(conversationState==='awaiting_social'){const lci=messageText.toLowerCase();if(allowedSocialMedia.includes(lci)){currentSocialMedia=lci;saveData(SOCIAL_MEDIA_KEY,currentSocialMedia);startConversation()}else{addBotMessage("Lütfen listedeki platformlardan birini yazar mısın? (Instagram, EU Portal, X, Tiktok)")}}else if(conversationState==='awaiting_username'){currentSocialUser=messageText;saveData(SOCIAL_USER_KEY,currentSocialUser);addBotMessage(`Teşekkürler ${currentUserName}! Tüm bilgilerin kaydedildi.`);startConversation()}else if(conversationState==='awaiting_reset_confirmation'){const lci=messageText.toLowerCase();if(lci==='evet'){removeData(USER_NAME_KEY);removeData(SOCIAL_MEDIA_KEY);removeData(SOCIAL_USER_KEY);removeAllSponsorData();currentUserName=null;currentSocialMedia=null;currentSocialUser=null;addBotMessage("Tüm kayıtlı bilgilerin (tanışma ve sponsor) silindi.");conversationState='idle';setTimeout(startConversation,800)}else{addBotMessage("İşlem iptal edildi.");conversationState='idle'}}else if(conversationState==='awaiting_tk_no'){const tkNo=messageText;saveData(TK_MILES_KEY,tkNo);currentTkMiles=tkNo;addBotMessage(`Miles&Smiles (${tkNo}) kaydınız alındı. Özel teklifler için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_mavi_gsm'){const maviGsm=messageText;saveData(MAVI_GSM_KEY,maviGsm);currentMaviGsm=maviGsm;addBotMessage(`Mavi Kartuş (${maviGsm}) GSM kaydınız alındı. Kampanyalardan haberdar edileceksiniz!`);conversationState='idle'}else if(conversationState==='awaiting_carrefoursa_info'){const csInfo=messageText;saveData(CARREFOURSA_INFO_KEY,csInfo);currentCarrefoursaInfo=csInfo;addBotMessage(`CarrefourSA (${csInfo}) bilginiz kaydedildi. İlgili kampanyalar hakkında bilgi verilecek!`);conversationState='idle'}else if(conversationState==='awaiting_swissair_no'){const swissNo=messageText;saveData(SWISSAIR_NO_KEY,swissNo);currentSwissairNo=swissNo;addBotMessage(`Swiss Air (${swissNo}) yolcu programı kaydınız alındı. Uçuşlarınızda başarılar!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_eu'){const cEuNo=messageText;saveData(CARREFOUR_EU_KEY,cEuNo);currentCarrefourEu=cEuNo;addBotMessage(`Carrefour Avrupa (${cEuNo}) kart bilginiz kaydedildi. Bölgesel kampanyalar için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_tiktak_gsm'){const tiktakGsm=messageText;saveData(TIKTAK_GSM_KEY,tiktakGsm);currentTiktakGsm=tiktakGsm;addBotMessage(`TikTak (${tiktakGsm}) GSM kaydınız alındı. Kullanımlarınızda bol şans!`);conversationState='idle'}else if(conversationState==='awaiting_trendyol_email'){const trendyolMail=messageText;saveData(TRENDYOL_EMAIL_KEY,trendyolMail);currentTrendyolEmail=trendyolMail;addBotMessage(`Trendyol (${trendyolMail}) e-posta adresiniz kaydedildi. Özel indirimler için hesabınızı kontrol edin!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_no'){const enteredNumber=messageText;addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır.`);conversationState='idle'}
+             if(conversationState==='awaiting_name'){currentUserName=messageText;saveData(USER_NAME_KEY,currentUserName);startConversation()}else if(conversationState==='awaiting_social'){const lci=messageText.toLowerCase();if(allowedSocialMedia.includes(lci)){currentSocialMedia=lci;saveData(SOCIAL_MEDIA_KEY,currentSocialMedia);startConversation()}else{addBotMessage("Lütfen listedeki platformlardan birini yazar mısın? (Instagram, EU Portal, X, Tiktok)")}}else if(conversationState==='awaiting_username'){currentSocialUser=messageText;saveData(SOCIAL_USER_KEY,currentSocialUser);addBotMessage(`Teşekkürler ${currentUserName}! Tüm bilgilerin kaydedildi.`);startConversation()}else if(conversationState==='awaiting_reset_confirmation'){const lci=messageText.toLowerCase();if(lci==='evet'){removeData(USER_NAME_KEY);removeData(SOCIAL_MEDIA_KEY);removeData(SOCIAL_USER_KEY);removeAllSponsorData();currentUserName=null;currentSocialMedia=null;currentSocialUser=null;addBotMessage("Tüm kayıtlı bilgilerin (tanışma ve sponsor) silindi.");conversationState='idle';setTimeout(startConversation,800)}else{addBotMessage("İşlem iptal edildi.");conversationState='idle'}}else if(conversationState==='awaiting_tk_no'){const tkNo=messageText;saveData(TK_MILES_KEY,tkNo);currentTkMiles=tkNo;addBotMessage(`Miles&Smiles (${tkNo}) kaydınız alındı. Özel teklifler için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_mavi_gsm'){const maviGsm=messageText;saveData(MAVI_GSM_KEY,maviGsm);currentMaviGsm=maviGsm;addBotMessage(`Mavi Kartuş (${maviGsm}) GSM kaydınız alındı. Kampanyalardan haberdar edileceksiniz!`);conversationState='idle'}else if(conversationState==='awaiting_carrefoursa_info'){const csInfo=messageText;saveData(CARREFOURSA_INFO_KEY,csInfo);currentCarrefoursaInfo=csInfo;addBotMessage(`CarrefourSA (${csInfo}) bilginiz kaydedildi. İlgili kampanyalar hakkında bilgi verilecek!`);conversationState='idle'}else if(conversationState==='awaiting_swissair_no'){const swissNo=messageText;saveData(SWISSAIR_NO_KEY,swissNo);currentSwissairNo=swissNo;addBotMessage(`Swiss Air (${swissNo}) yolcu programı kaydınız alındı. Uçuşlarınızda başarılar!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_eu'){const cEuNo=messageText;saveData(CARREFOUR_EU_KEY,cEuNo);currentCarrefourEu=cEuNo;addBotMessage(`Carrefour Avrupa (${cEuNo}) kart bilginiz kaydedildi. Bölgesel kampanyalar için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_tiktak_gsm'){const tiktakGsm=messageText;saveData(TIKTAK_GSM_KEY,tiktakGsm);currentTiktakGsm=tiktakGsm;addBotMessage(`TikTak (${tiktakGsm}) GSM kaydınız alındı. Kullanımlarınızda bol şans!`);conversationState='idle'}else if(conversationState==='awaiting_trendyol_email'){const trendyolMail=messageText;saveData(TRENDYOL_EMAIL_KEY,trendyolMail);currentTrendyolEmail=trendyolMail;addBotMessage(`Trendyol (${trendyolMail}) e-posta adresiniz kaydedildi. Özel indirimler için hesabınızı kontrol edin!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_no'){const enteredNumber=messageText;addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır.`);conversationState='idle'}
 
         } else { // conversationState === 'idle'
             if (messageText.startsWith('/')) {
@@ -135,8 +130,9 @@ function sendMessage() {
                 if (lowerCaseInput === 'merhaba' || lowerCaseInput === 'selam') { addBotMessage(`Merhaba ${currentUserName || ''}!`); }
                 else if (lowerCaseInput === 'naber' || lowerCaseInput === 'nasılsın') { addBotMessage("İyiyim, sorduğun için teşekkürler! Sen nasılsın?"); }
                 else {
-                    if (typeof HF_TOKEN !== 'undefined' && HF_TOKEN && HF_TOKEN !== 'SENIN_HF_TOKENIN_BURAYA') {
-                         getHuggingFaceResponse(messageText); // API çağrısı HF'e göre
+                    // API Anahtarı varsa Gemini'yi çağır
+                    if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_API_ANAHTARIN_BURAYA') {
+                         getGeminiResponse(messageText); // Gemini fonksiyonunu çağırıyoruz
                     } else {
                          addBotMessage("Şu an sadece belirli komutlara ve selamlaşmalara cevap verebiliyorum ama komutları kullanabilirsin: /help, /sponsor-kayit, /rewards");
                     }
