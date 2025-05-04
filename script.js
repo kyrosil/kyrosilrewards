@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const USER_NAME_KEY = 'kyrosil_userName'; const SOCIAL_MEDIA_KEY = 'kyrosil_socialMedia'; const SOCIAL_USER_KEY = 'kyrosil_socialUser'; const LANG_KEY = 'kyrosil_userLang'; const TK_MILES_KEY = 'kyrosil_tkMiles'; const MAVI_GSM_KEY = 'kyrosil_maviGsm'; const CARREFOURSA_INFO_KEY = 'kyrosil_carrefoursaInfo'; const SWISSAIR_NO_KEY = 'kyrosil_swissairNo'; const CARREFOUR_EU_KEY = 'kyrosil_carrefourEu'; const TIKTAK_GSM_KEY = 'kyrosil_tiktakGsm'; const TRENDYOL_EMAIL_KEY = 'kyrosil_trendyolEmail'; const CSA_ALGIDA_KEY = 'kyrosil_csaAlgidaInfo';
 
     // Google Gemini API Ayarları
-    const GEMINI_API_KEY = 'SENIN_API_ANAHTARIN_BURAYA'; // !!! KENDİ ANAHTARINI BURAYA YAPIŞTIR !!!
+    const GEMINI_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // !!! KENDİ ANAHTARINI BURAYA YAPIŞTIR !!!
     const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
 
     // === Değişkenler ===
