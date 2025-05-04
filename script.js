@@ -17,9 +17,9 @@ const TRENDYOL_EMAIL_KEY = 'kyrosil_trendyolEmail';
 
 // Google Gemini API Ayarları
 const GEMINI_API_KEY = 'AIzaSyDKAlH4qmyd2m-qQ9Bx6DvMFvkvNs74cts'; // !!! KENDİ ANAHTARINI BURAYA YAPIŞTIR !!!
-// === MODEL ADI GÜNCELLENDİ ===
-const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY; 
-// ============================
+// === MODEL ADI GÜNCELLENDİ (1.5 Pro Latest / v1beta) ===
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=" + GEMINI_API_KEY;
+// =======================================================
 
 // Konuşma durumunu takip etmek için değişken
 let conversationState = 'idle';
@@ -62,7 +62,7 @@ async function getGeminiResponse(prompt) {
     const payload = { contents: [{ parts: [{"text": prompt}] }] };
     try {
          if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_API_ANAHTARIN_BURAYA') { throw new Error("API Anahtarı ayarlanmamış veya geçersiz."); }
-         // API_URL artık doğru modeli içeriyor olmalı
+         // API_URL artık yeni modeli içeriyor
         const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!response.ok) { const errorData = await response.json(); throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`); }
         const data = await response.json();
@@ -91,7 +91,6 @@ function sendMessage() {
 
         // State handling (onboarding, reset, sponsor info)
         if (conversationState !== 'idle') {
-            // Bu bloklarda değişiklik yok...
             if(conversationState==='awaiting_name'){currentUserName=messageText;saveData(USER_NAME_KEY,currentUserName);startConversation()}else if(conversationState==='awaiting_social'){const lci=messageText.toLowerCase();if(allowedSocialMedia.includes(lci)){currentSocialMedia=lci;saveData(SOCIAL_MEDIA_KEY,currentSocialMedia);startConversation()}else{addBotMessage("Lütfen listedeki platformlardan birini yazar mısın? (Instagram, EU Portal, X, Tiktok)")}}else if(conversationState==='awaiting_username'){currentSocialUser=messageText;saveData(SOCIAL_USER_KEY,currentSocialUser);addBotMessage(`Teşekkürler ${currentUserName}! Tüm bilgilerin kaydedildi.`);startConversation()}else if(conversationState==='awaiting_reset_confirmation'){const lci=messageText.toLowerCase();if(lci==='evet'){removeData(USER_NAME_KEY);removeData(SOCIAL_MEDIA_KEY);removeData(SOCIAL_USER_KEY);removeAllSponsorData();currentUserName=null;currentSocialMedia=null;currentSocialUser=null;addBotMessage("Tüm kayıtlı bilgilerin (tanışma ve sponsor) silindi.");conversationState='idle';setTimeout(startConversation,800)}else{addBotMessage("İşlem iptal edildi.");conversationState='idle'}}else if(conversationState==='awaiting_tk_no'){const tkNo=messageText;saveData(TK_MILES_KEY,tkNo);currentTkMiles=tkNo;addBotMessage(`Miles&Smiles (${tkNo}) kaydınız alındı. Özel teklifler için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_mavi_gsm'){const maviGsm=messageText;saveData(MAVI_GSM_KEY,maviGsm);currentMaviGsm=maviGsm;addBotMessage(`Mavi Kartuş (${maviGsm}) GSM kaydınız alındı. Kampanyalardan haberdar edileceksiniz!`);conversationState='idle'}else if(conversationState==='awaiting_carrefoursa_info'){const csInfo=messageText;saveData(CARREFOURSA_INFO_KEY,csInfo);currentCarrefoursaInfo=csInfo;addBotMessage(`CarrefourSA (${csInfo}) bilginiz kaydedildi. İlgili kampanyalar hakkında bilgi verilecek!`);conversationState='idle'}else if(conversationState==='awaiting_swissair_no'){const swissNo=messageText;saveData(SWISSAIR_NO_KEY,swissNo);currentSwissairNo=swissNo;addBotMessage(`Swiss Air (${swissNo}) yolcu programı kaydınız alındı. Uçuşlarınızda başarılar!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_eu'){const cEuNo=messageText;saveData(CARREFOUR_EU_KEY,cEuNo);currentCarrefourEu=cEuNo;addBotMessage(`Carrefour Avrupa (${cEuNo}) kart bilginiz kaydedildi. Bölgesel kampanyalar için takipte kalın!`);conversationState='idle'}else if(conversationState==='awaiting_tiktak_gsm'){const tiktakGsm=messageText;saveData(TIKTAK_GSM_KEY,tiktakGsm);currentTiktakGsm=tiktakGsm;addBotMessage(`TikTak (${tiktakGsm}) GSM kaydınız alındı. Kullanımlarınızda bol şans!`);conversationState='idle'}else if(conversationState==='awaiting_trendyol_email'){const trendyolMail=messageText;saveData(TRENDYOL_EMAIL_KEY,trendyolMail);currentTrendyolEmail=trendyolMail;addBotMessage(`Trendyol (${trendyolMail}) e-posta adresiniz kaydedildi. Özel indirimler için hesabınızı kontrol edin!`);conversationState='idle'}else if(conversationState==='awaiting_carrefour_no'){const enteredNumber=messageText;addBotMessage(`Katılımınız alındı! Girdiğiniz numara (${enteredNumber}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır.`);conversationState='idle'}
 
         } else { // conversationState === 'idle'
