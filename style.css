@@ -2,153 +2,92 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 /* Genel sayfa stilleri */
+html, body {
+    height: 100%; /* Tam yükseklik için */
+    overflow: hidden; /* Ana sayfada kaydırmayı engelle */
+}
+
 body {
-    font-family: 'Inter', sans-serif; /* Yeni yazı tipi */
+    font-family: 'Inter', sans-serif;
     margin: 0;
-    padding: 0; /* Kenar boşluklarını sıfırladık, container yönetecek */
-    background-color: #e9ebee; /* Daha açık, yumuşak bir gri */
+    padding: 0; /* Padding'i kaldırdık, container yönetecek */
+    background-color: #e9ebee;
     display: flex;
     justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    align-items: center; /* Dikeyde ortalamak için */
+    min-height: 100%; /* Veya 100vh */
     box-sizing: border-box;
 }
 
 /* Sohbet kutusunun ana taşıyıcısı */
 #chat-container {
     width: 100%; /* Mobilde tam genişlik */
-    max-width: 700px; /* Maksimum genişliği biraz artırdık */
-    height: 90vh; /* Yüksekliği biraz artırdık */
-    max-height: 800px;
-    background-color: #ffffff; /* Saf beyaz */
-    border-radius: 12px; /* Daha belirgin yuvarlaklık */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Daha belirgin gölge */
+    max-width: 700px;
+    height: 90vh; /* Yüksekliği viewport'a göre ayarla */
+    /* max-height: 800px; */ /* Max height'i kaldırmak daha iyi olabilir */
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15); /* Gölgeyi biraz artırdık */
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    margin: 15px; /* Küçük ekranlarda kenarlardan boşluk */
+    overflow: hidden; /* İçerik taşmasını engelle */
+    margin: 15px; /* Masaüstü için kenar boşluğu */
 }
 
 /* Üst Logo Stili */
 #header-logo {
     display: block;
-    height: 50px; /* Biraz küçülttük */
+    height: 50px;
     width: auto;
-    margin: 20px auto 10px auto; /* Boşlukları ayarladık */
+    margin: 20px auto 10px auto;
     opacity: 0.9;
 }
 
 /* Başlık Stili */
 #chat-title {
     text-align: center;
-    font-size: 1.5em; /* Biraz büyüttük */
-    color: #2c3e50; /* Koyu mavi/gri tonu */
+    font-size: 1.5em;
+    color: #2c3e50;
     margin-top: 0;
     margin-bottom: 15px;
-    font-weight: 600; /* Biraz daha kalın */
+    font-weight: 600;
+    padding: 0 10px; /* Başlık taşmasın */
 }
 
 /* Mesajların görüneceği alan */
 #chat-box {
-    flex-grow: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background-color: #fdfdfd; /* Çok hafif kırık beyaz */
+    flex-grow: 1; /* Esas alanı kapla */
+    padding: 15px 20px; /* Yan boşlukları artır */
+    overflow-y: auto; /* Sadece dikey kaydırma */
+    background-color: #fdfdfd;
     border-top: 1px solid #e8e8e8;
     border-bottom: 1px solid #e8e8e8;
-    scroll-behavior: smooth; /* Daha yumuşak kaydırma */
+    scroll-behavior: smooth;
 }
 
-/* Webkit tarayıcılar için scrollbar stili (opsiyonel) */
-#chat-box::-webkit-scrollbar {
-    width: 6px;
-}
-#chat-box::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-#chat-box::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 10px;
-}
-#chat-box::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
+/* Webkit scrollbar stili */
+#chat-box::-webkit-scrollbar { width: 6px; }
+#chat-box::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+#chat-box::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+#chat-box::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 
 /* Genel mesaj stilleri */
-.message {
-    margin-bottom: 18px; /* Mesaj arası boşluğu artırdık */
-    max-width: 80%; /* Maksimum genişlik */
-    line-height: 1.5; /* Satır yüksekliği */
-    display: flex;
-    align-items: flex-end; /* Hizalamayı alta aldık, logo ve balon daha iyi durabilir */
-    word-wrap: break-word;
-}
-
+.message { margin-bottom: 18px; max-width: 80%; line-height: 1.5; display: flex; align-items: flex-end; word-wrap: break-word; }
 /* Bot mesajlarının stilleri */
-.message.bot-message {
-    color: #333; /* Yazı rengi */
-    align-self: flex-start;
-    margin-right: auto;
-}
-
+.message.bot-message { color: #333; align-self: flex-start; margin-right: auto; }
 /* Bot Mesaj Logosu Stili */
-.message.bot-message::before {
-    content: '';
-    display: inline-block; /* Veya flex item olarak kalabilir */
-    width: 38px;  /* Boyutu biraz daha ayarladık */
-    height: 38px;
-    border-radius: 50%;
-    background-image: url('indir.png');
-    background-size: cover; /* 'contain' yerine 'cover' daha dolgun gösterebilir */
-    background-repeat: no-repeat;
-    background-position: center center;
-    margin-right: 12px; /* Boşluğu ayarladık */
-    flex-shrink: 0;
-    /* align-self: flex-end; */ /* Eğer flex-end hizalaması istenirse */
-    border: 1px solid #eee; /* Çok hafif bir kenarlık */
-}
-
+.message.bot-message::before { content: ''; display: inline-block; width: 38px; height: 38px; border-radius: 50%; background-image: url('indir.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; margin-right: 12px; flex-shrink: 0; border: 1px solid #eee; }
 /* Bot mesajı içeriği (paragraf ve timestamp wrapper'ı) */
-.message.bot-message div {
-    background-color: #f1f0f0; /* Daha açık gri */
-    padding: 12px 18px; /* İç boşlukları artırdık */
-    border-radius: 20px; /* Daha yuvarlak */
-    display: inline-block;
-    max-width: calc(100% - 50px); /* Logo + margin */
-    position: relative;
-    min-height: 30px; /* Tek satır mesajlarda timestamp'in sığması için */
-}
-.message.bot-message p { margin: 0; margin-bottom: 15px; /* Timestamp için yer */ }
-
-
+.message.bot-message div { background-color: #f1f0f0; padding: 12px 18px; border-radius: 20px; display: inline-block; max-width: calc(100% - 50px); position: relative; min-height: 30px; }
+.message.bot-message p { margin: 0; margin-bottom: 18px; }
 /* Kullanıcı mesajlarının stilleri */
 .message.user-message { align-self: flex-end; margin-left: auto; }
 /* Kullanıcı mesaj içeriği (paragraf ve timestamp wrapper'ı) */
-.message.user-message div {
-    background-color: #007bff; /* Ana mavi renk */
-    color: #fff;
-    border-radius: 20px;
-    padding: 12px 18px;
-    display: inline-block;
-    max-width: 100%;
-    position: relative;
-    min-height: 30px;
-}
-.message.user-message p { margin: 0; margin-bottom: 15px; }
-
+.message.user-message div { background-color: #007bff; color: #fff; border-radius: 20px; padding: 12px 18px; display: inline-block; max-width: 100%; position: relative; min-height: 30px; }
+.message.user-message p { margin: 0; margin-bottom: 18px; }
 /* Saat Damgası Stili */
-.timestamp {
-    display: block;
-    font-size: 0.7em;
-    text-align: right;
-    position: absolute;
-    bottom: 5px; /* Konumu biraz ayarladık */
-    right: 12px;
-    width: calc(100% - 24px); /* Padding'i hesaba katalım */
-    opacity: 0.7; /* Biraz soluk */
-}
+.timestamp { display: block; font-size: 0.7em; text-align: right; position: absolute; bottom: 5px; right: 12px; width: calc(100% - 24px); opacity: 0.7; }
 .message.bot-message .timestamp { color: #555; }
 .message.user-message .timestamp { color: #eee; }
 
@@ -156,83 +95,61 @@ body {
 /* Yazı yazma alanı */
 #input-area {
     display: flex;
-    padding: 15px; /* Boşluğu artırdık */
-    background-color: #fff; /* Arka plan beyaz */
+    padding: 12px 15px; /* Boşlukları ayarladık */
+    background-color: #fff;
     border-top: 1px solid #e8e8e8;
-    align-items: center; /* Dikeyde ortala */
+    align-items: center;
+    flex-shrink: 0; /* Bu alanın küçülmemesini sağla */
 }
 
 /* Yazı yazma kutusu */
 #user-input {
     flex-grow: 1;
-    padding: 12px 18px; /* İç boşluğu artırdık */
-    border: 1px solid #ddd; /* Daha yumuşak kenarlık */
-    border-radius: 24px; /* Tam yuvarlak kenarlar */
-    margin-right: 10px;
-    font-size: 1rem;
-    outline: none; /* Tıklayınca çıkan çerçeveyi kaldır */
+    padding: 10px 16px; /* Padding'i biraz daha iyi ayarladık */
+    border: 1px solid #ddd;
+    border-radius: 20px; /* Yuvarlaklığı butonla aynı yaptık */
+    margin-right: 8px; /* Butonla arayı azalttık */
+    font-size: 0.95rem; /* Biraz küçülttük */
+    line-height: 1.4; /* Satır yüksekliği */
+    outline: none;
     transition: border-color 0.2s ease;
 }
-#user-input:focus {
-    border-color: #007bff; /* Tıklayınca mavi kenarlık */
-}
+#user-input:focus { border-color: #007bff; }
 
 
 /* Gönder butonu */
 #send-button {
-    padding: 12px 22px; /* Boyutu ayarladık */
+    padding: 10px 20px; /* Padding'i ayarladık */
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 24px; /* Tam yuvarlak kenarlar */
+    border-radius: 20px; /* Yuvarlaklığı input ile aynı yaptık */
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500; /* Biraz daha belirgin */
+    font-size: 0.95rem;
+    font-weight: 500;
     transition: background-color 0.2s ease, transform 0.1s ease;
+    white-space: nowrap; /* "Gönder" yazısı sığmazsa alt satıra inmesin */
 }
-#send-button:hover {
-    background-color: #0056b3;
-}
-#send-button:active { /* Tıklama anı efekti */
-    transform: scale(0.96);
-}
+#send-button:hover { background-color: #0056b3; }
+#send-button:active { transform: scale(0.96); }
 
-/* === Mobil Uyumluluk (Örnek) === */
+/* === Mobil Uyumluluk === */
 @media (max-width: 600px) {
-    body {
-        padding: 0; /* Mobilde kenar boşluğu olmasın */
-        align-items: flex-start; /* Yukarıdan başlasın */
-    }
+    body { padding: 0; align-items: stretch; /* Tam yüksekliği kaplasın */ }
     #chat-container {
-        width: 100%;
-        height: 100vh; /* Tam ekran */
+        height: 100%; /* Tam yükseklik */
         max-height: none;
-        border-radius: 0; /* Kenar yuvarlaklığı olmasın */
+        border-radius: 0;
         margin: 0;
-        box-shadow: none; /* Gölge olmasın */
+        box-shadow: none;
     }
-    #chat-box {
-        padding: 10px; /* Daha az padding */
-    }
-    .message {
-        max-width: 90%; /* Mesajlar biraz daha genişleyebilir */
-    }
-    #input-area {
-        padding: 10px;
-    }
-    #user-input {
-        padding: 10px 15px;
-    }
-    #send-button {
-        padding: 10px 18px;
-    }
-     #header-logo {
-        height: 40px;
-        margin-top: 15px;
-    }
-    #chat-title {
-        font-size: 1.2em;
-        margin-bottom: 10px;
-    }
-
+    #chat-box { padding: 10px; }
+    .message { max-width: 90%; }
+    #input-area { padding: 8px 10px; } /* Mobil için daha az padding */
+    #user-input { padding: 8px 14px; font-size: 0.9rem; }
+    #send-button { padding: 8px 16px; font-size: 0.9rem; }
+     #header-logo { height: 40px; margin-top: 15px; }
+    #chat-title { font-size: 1.2em; margin-bottom: 10px; }
+    .timestamp { font-size: 0.65em; bottom: 3px; right: 8px; }
+    .message.bot-message p, .message.user-message p { margin-bottom: 15px; /* Mobil için yeterli mi? */ }
 }
