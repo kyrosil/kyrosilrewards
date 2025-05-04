@@ -18,7 +18,7 @@ const TRENDYOL_EMAIL_KEY = 'kyrosil_trendyolEmail';
 // Google Gemini API Ayarları
 const GEMINI_API_KEY = 'AIzaSyDKAlH4qmyd2m-qQ9Bx6DvMFvkvNs74cts'; // !!! KENDİ ANAHTARINI BURAYA YAPIŞTIR !!!
 // === MODEL ADI GÜNCELLENDİ ===
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY; 
+const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY; 
 // ============================
 
 // Konuşma durumunu takip etmek için değişken
