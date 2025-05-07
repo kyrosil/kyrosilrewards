@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // API Anahtarları (Kendi anahtarını ekle!)
     const GEMINI_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // Gemini için
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
 
     // localStorage için anahtar (key) tanımları
     const USER_NAME_KEY = 'kyrosil_userName'; 
