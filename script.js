@@ -346,20 +346,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function getGeminiThinkResponse(prompt) {
-        const payload = { contents: [{ role: 'user', parts: [{ text: prompt + ' (Detaylı analiz yap.)' }] }] };
-        try {
-            const response = await fetch(GEMINI_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            return data.candidates?.[0]?.content?.parts?.[0]?.text || translations[currentLang].api_fail_generic;
-        } catch (error) {
-            console.error('Gemini Think hatası:', error);
-            return translations[currentLang].api_fail_error(error.message);
-        }
+    const payload = {
+        contents: [{
+            role: 'user',
+            parts: [{ text: prompt + ' (Detaylı analiz yap.)' }]
+        }]
+    };
+    try {
+        const response = await fetch(GEMINI_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || translations[currentLang].api_fail_generic;
+    } catch (error) {
+        console.error('Gemini Think hatası:', error);
+        return translations[currentLang].api_fail_error(error.message);
     }
+}
 
     // --- Mesaj Gönderme Ana Mantığı ---
     function sendMessage() {
@@ -578,43 +583,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Gemini API Fonksiyonu ---
     async function getGeminiResponse() {
-        if (chatHistory.length === 0 || chatHistory[chatHistory.length - 1].role !== 'user') return;
-        addMessage("...", 'model');
-        const thinkingMessageElement = chatBox.lastElementChild;
-        const payload = { contents: chatHistory };
-        try {
-            if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_API_ANAHTARIN_BURAYA') {
-                throw new Error(translations[currentLang].api_fail_error("API Anahtarı ayarlanmamış veya geçersiz."));
-            }
-            const response = await fetch(GEMINI_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`);
-            }
-            const data = await response.json();
-            let botReply = translations[currentLang].api_fail_generic;
-            if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
-                botReply = data.candidates[0].content.parts[0].text;
-            } else if (data.promptFeedback && data.promptFeedback.blockReason) {
-                botReply = translations[currentLang].content_blocked(data.promptFeedback.blockReason);
-                console.error("API İçerik Engeli:", data.promptFeedback);
-            }
-            if (thinkingMessageElement && thinkingMessageElement.classList.contains('bot-message') && thinkingMessageElement.textContent.startsWith("...")) {
-                thinkingMessageElement.remove();
-            }
-            addMessage(botReply, 'model');
-        } catch (error) {
-            console.error("Gemini API isteği başarısız:", error);
-            if (thinkingMessageElement && thinkingMessageElement.classList.contains('bot-message') && thinkingMessageElement.textContent.startsWith("...")) {
-                thinkingMessageElement.remove();
-            }
-            addMessage(translations[currentLang].api_fail_error(error.message), 'model');
+    if (chatHistory.length === 0 || chatHistory[chatHistory.length - 1].role !== 'user') return;
+    addMessage("...", 'model');
+    const thinkingMessageElement = chatBox.lastElementChild;
+
+    // chatHistory'den imageSrc'yi çıkararak yeni bir payload oluştur
+    const filteredHistory = chatHistory.map(item => ({
+        role: item.role,
+        parts: item.parts.map(part => ({
+            text: part.text // Sadece text alanını al, imageSrc'yi dışarıda bırak
+        }))
+    }));
+
+    const payload = { contents: filteredHistory };
+    try {
+        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_API_ANAHTARIN_BURAYA') {
+            throw new Error(translations[currentLang].api_fail_error("API Anahtarı ayarlanmamış veya geçersiz."));
         }
+        const response = await fetch(GEMINI_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`);
+        }
+        const data = await response.json();
+        let botReply = translations[currentLang].api_fail_generic;
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+            botReply = data.candidates[0].content.parts[0].text;
+        } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+            botReply = translations[currentLang].content_blocked(data.promptFeedback.blockReason);
+            console.error("API İçerik Engeli:", data.promptFeedback);
+        }
+        if (thinkingMessageElement && thinkingMessageElement.classList.contains('bot-message') && thinkingMessageElement.textContent.startsWith("...")) {
+            thinkingMessageElement.remove();
+        }
+        addMessage(botReply, 'model');
+    } catch (error) {
+        console.error("Gemini API isteği başarısız:", error);
+        if (thinkingMessageElement && thinkingMessageElement.classList.contains('bot-message') && thinkingMessageElement.textContent.startsWith("...")) {
+            thinkingMessageElement.remove();
+        }
+        addMessage(translations[currentLang].api_fail_error(error.message), 'model');
     }
+}
 
     // --- Konuşmayı Başlatma Fonksiyonu ---
     function startConversation() {
