@@ -292,73 +292,86 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
 
 /* Mobil Uyumluluk (max-width: 600px) */
 @media (max-width: 600px) {
-    body { padding: 0; align-items: stretch; }
-    #chat-container { height: 100%; max-height: none; border-radius: 0; margin: 0; box-shadow: none; }
-    #chat-box { padding: 15px; }
-    .message { max-width: 90%; }
+    body { 
+        padding: 10px; 
+        align-items: stretch; 
+    }
+    #chat-container { 
+        height: 100%; 
+        max-height: none; 
+        border-radius: 10px; 
+        margin: 0; 
+        box-shadow: none; 
+    }
+    #chat-box { 
+        padding: 10px; /* Daha ferah */
+        margin: 10px 0; /* Daha fazla boşluk */
+    }
+    .message { 
+        max-width: 85%; /* Mesajlar biraz daha küçük */
+        margin-bottom: 15px; /* Mesajlar arasında daha fazla boşluk */
+    }
     #input-area { 
-        padding: 10px 15px; 
-        gap: 5px; 
+        padding: 8px 10px; 
+        gap: 8px; 
         align-items: center; 
     }
     #user-input { 
-        padding: 8px 12px; 
-        font-size: 0.85rem; 
+        padding: 6px 10px; 
+        font-size: 0.8rem; 
     }
     .action-button { 
-        padding: 6px 12px; 
-        font-size: 0.75rem; 
+        padding: 5px 10px; 
+        font-size: 0.7rem; 
     }
-    #chat-title { font-size: 1.3em; margin: 15px 0; }
-    .timestamp { font-size: 0.65em; bottom: 3px; right: 8px; }
-    #input-area { 
-        flex-wrap: nowrap; 
+    #chat-title { 
+        font-size: 1.2em; 
+        margin: 10px 0; 
+    }
+    .timestamp { 
+        font-size: 0.6em; 
+        bottom: 2px; 
+        right: 6px; 
     }
     #control-bar {
         flex-direction: column;
         align-items: stretch;
-        padding: 8px 15px;
+        padding: 8px 10px;
+        gap: 8px; /* Daha ferah */
     }
     #control-bar .top-controls {
         display: flex;
         justify-content: space-between;
         width: 100%;
-        margin-bottom: 8px;
     }
     #control-bar .bottom-controls {
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         width: 100%;
     }
     .control-button {
-        padding: 6px 10px;
-        font-size: 0.75rem;
+        padding: 5px 0; /* Daha küçük padding */
+        font-size: 0.7rem;
         flex: 1;
-        min-width: 60px;
         margin: 0 2px;
+        text-align: center;
     }
     .mode-select {
-        padding: 6px 10px;
-        font-size: 0.75rem;
-        max-width: 150px;
-        margin-left: auto;
-        margin-right: 5px;
-    }
-    #input-area {
-        justify-content: space-between;
-    }
-    #input-area .mode-select {
-        order: 3; /* Upload butonunun yanına yerleştir */
+        padding: 5px 0;
+        font-size: 0.7rem;
+        flex: 1;
+        margin: 0 2px;
+        text-align: center;
     }
     .header-logo {
-        height: 30px;
+        height: 25px;
     }
     .message.bot-message {
-        padding-left: 35px;
+        padding-left: 30px;
     }
     .message.bot-message::before {
-        width: 25px;
-        height: 25px;
+        width: 20px;
+        height: 20px;
     }
 }
 
