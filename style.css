@@ -304,16 +304,16 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
         box-shadow: none; 
     }
     #chat-box { 
-        padding: 8px; /* Daha az padding ile chat alanı genişliyor */
-        margin: 5px 0; /* Daha az margin */
+        padding: 10px; /* Daha ferah */
+        margin: 5px 0; 
     }
     .message { 
-        max-width: 80%; /* Mesajlar daha küçük */
-        margin-bottom: 10px; /* Mesajlar arasında daha az boşluk */
-        font-size: 0.85rem; /* Yazı boyutunu küçülterek ferahlık */
+        max-width: 85%; 
+        margin-bottom: 15px; 
+        font-size: 0.9rem; 
     }
     .message.bot-message div, .message.user-message div { 
-        padding: 10px 15px; /* Mesaj kutuları daha küçük */
+        padding: 12px 18px; 
         border-radius: 12px; 
     }
     #input-area { 
@@ -330,53 +330,44 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
         font-size: 0.7rem; 
     }
     #chat-title { 
-        font-size: 1.1em; /* Başlık daha küçük */
-        margin: 8px 0; 
+        font-size: 1.2em; 
+        margin: 10px 0; 
     }
     .timestamp { 
-        font-size: 0.55em; 
+        font-size: 0.6em; 
         bottom: 2px; 
-        right: 5px; 
+        right: 6px; 
     }
     #control-bar {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 5px 10px; /* Daha az padding */
-        gap: 5px; /* Daha az boşluk */
-    }
-    #control-bar .top-controls {
-        display: flex;
+        flex-direction: row; /* Tüm butonlar yanyana */
+        align-items: center;
         justify-content: space-between;
-        width: 100%;
-    }
-    #control-bar .bottom-controls {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
+        padding: 5px 10px; /* Daha az yer kaplasın */
+        gap: 5px;
     }
     .control-button {
-        padding: 4px 0; /* Daha küçük padding */
+        padding: 4px 8px; /* Daha küçük padding */
         font-size: 0.65rem; /* Daha küçük yazı */
         flex: 1;
         margin: 0 2px;
         text-align: center;
     }
     .mode-select {
-        padding: 4px 0;
+        padding: 4px 8px;
         font-size: 0.65rem;
         flex: 1;
         margin: 0 2px;
         text-align: center;
     }
     .header-logo {
-        height: 20px; /* Daha küçük logo */
+        height: 25px;
     }
     .message.bot-message {
-        padding-left: 25px; /* Daha küçük avatar alanı */
+        padding-left: 30px;
     }
     .message.bot-message::before {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
     }
 }
 
