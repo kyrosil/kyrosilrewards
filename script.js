@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // API Anahtarları (Kendi anahtarlarını ekle!)
     const GEMINI_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // Gemini için
-    const GOOGLE_VISION_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // Google Vision için
+    const GOOGLE_VISION_API_KEY = 'AIzaSyB0V8A1n61F8HQKZZlZ1-2CMd4y7VUJchM'; // Google Vision için
     const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
     const GOOGLE_VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate?key=" + GOOGLE_VISION_API_KEY;
 
