@@ -12,28 +12,29 @@
         <h1 id="chat-title">Kyrosil Rewards Bot</h1>
         <div id="chat-box"></div>
         
-        <!-- Fotoğraf önizleme alanı -->
         <div id="image-preview" style="display: none; text-align: center;">
             <img id="preview-img" style="max-width: 100%; max-height: 300px;" />
+            <button id="send-photo-button" class="action-button">✈️</button>
         </div>
         
         <div id="input-area">
             <input type="text" id="user-input" placeholder="Mesajınızı yazın...">
-            <button id="send-button" class="action-button">Gönder</button>
+            <button id="send-button" class="action-button">✈️</button>
             <input type="file" id="image-upload" accept="image/*" style="display: none;">
-            <button id="upload-button" class="action-button">Fotoğraf Yükle</button>
-            <button id="filter-button" class="action-button" style="display: none;">Siyah-Beyaz Yap</button>
+            <button id="upload-button" class="action-button">📷</button>
+            <button id="filter-button" class="action-button" style="display: none;">⚙️</button>
         </div>
         
-        <!-- Ekstra kontrol çubuğu -->
         <div id="control-bar">
-            <button id="deepsearch-button" class="control-button">DeepSearch</button>
-            <button id="think-button" class="control-button">Think</button>
-            <span id="bot-name">KyrosilRewards SUPER</span>
+            <button id="deepsearch-button" class="control-button">🔍</button>
+            <button id="think-button" class="control-button">🤔</button>
+            <select id="bot-mode" class="mode-select">
+                <option value="kyrosil">KyrosilRewards SUPER</option>
+            </select>
+            <button id="toggle-theme" class="control-button">🌙</button>
         </div>
     </div>
 
     <script src="script.js"></script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c0d58b0d6dbca7',t:'MTc0NjYyMjEzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
