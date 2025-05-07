@@ -304,7 +304,7 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
         box-shadow: none; 
     }
     #chat-box { 
-        padding: 10px; /* Daha ferah */
+        padding: 10px; 
         margin: 5px 0; 
     }
     .message { 
@@ -339,15 +339,24 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
         right: 6px; 
     }
     #control-bar {
-        flex-direction: row; /* Tüm butonlar yanyana */
-        align-items: center;
-        justify-content: space-between;
-        padding: 5px 10px; /* Daha az yer kaplasın */
+        flex-direction: column; /* Üst ve alt gruplar için */
+        align-items: stretch;
+        padding: 5px 10px; 
         gap: 5px;
     }
+    #control-bar .top-controls {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+    #control-bar .bottom-controls {
+        display: flex;
+        justify-content: center; /* KyrosilRewards SUPER ortalı */
+        width: 100%;
+    }
     .control-button {
-        padding: 4px 8px; /* Daha küçük padding */
-        font-size: 0.65rem; /* Daha küçük yazı */
+        padding: 4px 8px; 
+        font-size: 0.65rem; 
         flex: 1;
         margin: 0 2px;
         text-align: center;
@@ -355,8 +364,9 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
     .mode-select {
         padding: 4px 8px;
         font-size: 0.65rem;
-        flex: 1;
-        margin: 0 2px;
+        width: 100%; /* Alt satırda tam genişlik */
+        max-width: 200px; /* Çok geniş olmasın */
+        margin: 0 auto; /* Ortalamak için */
         text-align: center;
     }
     .header-logo {
@@ -376,5 +386,10 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
     #control-bar {
         flex-direction: row;
         justify-content: space-between;
+    }
+    #control-bar .top-controls,
+    #control-bar .bottom-controls {
+        display: flex;
+        align-items: center;
     }
 }
