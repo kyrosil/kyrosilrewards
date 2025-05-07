@@ -1,6 +1,6 @@
 // === DOMContentLoaded Olay Dinleyicisi Başlangıcı ===
 document.addEventListener('DOMContentLoaded', () => {
-    console.log(">>> Kyrosil Bot FINAL (v168) çalıştı! <<<");
+    console.log(">>> Kyrosil Bot FINAL (v169) çalıştı! <<<");
 
     // Gerekli HTML elementlerini seçiyoruz
     const chatBox = document.getElementById('chat-box');
@@ -14,9 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendPhotoButton = document.getElementById('send-photo-button');
     const deepsearchButton = document.getElementById('deepsearch-button');
     const thinkButton = document.getElementById('think-button');
+    const summarizeButton = document.getElementById('summarize-button');
     const toggleTheme = document.getElementById('toggle-theme');
 
-    if (!chatBox || !userInput || !sendButton || !uploadButton || !imageUpload || !filterButton || !previewImg || !imagePreview || !sendPhotoButton || !deepsearchButton || !thinkButton || !toggleTheme) {
+    if (!chatBox || !userInput || !sendButton || !uploadButton || !imageUpload || !filterButton || !previewImg || !imagePreview || !sendPhotoButton || !deepsearchButton || !thinkButton || !summarizeButton || !toggleTheme) {
         console.error("Hata: Gerekli HTML elementleri bulunamadı!");
         return;
     } else {
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // API Anahtarları (Kendi anahtarını ekle!)
     const GEMINI_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // Gemini için
-    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     // localStorage için anahtar (key) tanımları
     const USER_NAME_KEY = 'kyrosil_userName'; 
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const TIKTAK_GSM_KEY = 'kyrosil_tiktakGsm'; 
     const TRENDYOL_EMAIL_KEY = 'kyrosil_trendyolEmail'; 
     const CSA_ALGIDA_KEY = 'kyrosil_csaAlgidaInfo';
+    const THEME_KEY = 'kyrosil_theme';
 
     // === Değişkenler ===
     let conversationState = 'idle';
@@ -47,13 +49,86 @@ document.addEventListener('DOMContentLoaded', () => {
     let chatHistory = [];
     const MAX_HISTORY_LENGTH = 6;
     let currentUserName, currentSocialMedia, currentSocialUser;
-    let currentLang = loadData(LANG_KEY) || 'tr';
+    let currentLang = loadData(LANG_KEY) || 'en';
     let originalImage = null;
-    let isLightMode = false;
+    let isLightMode = loadData(THEME_KEY) === 'light';
     let pendingImage = null; // Gönderilecek fotoğrafı tutmak için
+    let awaitingSearchQuery = false;
 
     // === Dil Metinleri ===
     const translations = {
+        en: { 
+            welcome_new: "Welcome to KyrosilRewards, Europe's first and only fully integrated AI bot with sponsor brands! ✨",
+            ask_name: "I'd like to get to know you, what is your name?",
+            ask_social: (name) => `Welcome back ${name}! Which social media platform do you follow us from? (Instagram, EU Portal, X, Tiktok)`,
+            ask_username: (social) => `Great, glad you follow us via ${social}! What is your username there?`,
+            onboarding_complete: (name) => `Thanks ${name}! All your information has been saved.`,
+            welcome_back: (name) => `Welcome back, ${name}! If you're ready for great collaborations and rewards, you can type /rewards for current opportunities or /sponsors to see sponsor registration commands. /help is always there for other commands. To change language, type /lang [en/tr]. Or let's just chat!`,
+            prompt_social: "Please type one of the platforms from the list (Instagram, EU Portal, X, Tiktok)",
+            reset_confirm: "Are you sure? All your registered information (onboarding and sponsor) will be deleted. Type 'Yes' to confirm.",
+            reset_done: "All your registered information (onboarding and sponsor) has been deleted.",
+            reset_cancel: "Operation cancelled.",
+            prompt_tk: "Please enter your Miles&Smiles membership number (starting with TK):",
+            confirm_tk: (tkNo) => `Your Miles&Smiles (${tkNo}) registration has been received. Stay tuned for special offers!`,
+            prompt_mavi: "Please enter your GSM number registered to Mavi Kartuş Kart:",
+            confirm_mavi: (gsm) => `Your Mavi Kartuş (${gsm}) GSM registration has been received. You will be informed about campaigns!`,
+            prompt_carrefoursa: "Please enter your CarrefourSA card number or registered GSM number:",
+            confirm_carrefoursa: (info) => `Your CarrefourSA (${info}) information has been saved. You will be informed about relevant campaigns!`,
+            prompt_swissair: "Please enter your Swiss Air special passenger program number:",
+            confirm_swissair: (no) => `Your Swiss Air (${no}) passenger program registration has been received. Have a good flight!`,
+            prompt_carrefour_eu: "Please enter your Carrefour Card (Europe) number:",
+            confirm_carrefour_eu: (no) => `Your Carrefour Europe (${no}) card information has been saved. Stay tuned for regional campaigns!`,
+            prompt_tiktak: "Please enter your GSM number registered to TikTak:",
+            confirm_tiktak: (gsm) => `Your TikTak (${gsm}) registration has been received. Good luck with your usage!`,
+            prompt_trendyol: "Please enter your e-mail address registered to Trendyol:",
+            confirm_trendyol: (mail) => `Your Trendyol (${mail}) e-mail address has been saved. Check your account for special discounts!`,
+            prompt_csa_algida: "Please enter your CarrefourSA Card registered GSM number or Card number (Algida Campaign):",
+            confirm_csa_algida: (num) => `Your participation is received! Our automated systems will credit the 300 TL worth of Algida points to your card for the number (${num}) shortly.`,
+            help_text: "Available Commands:\n/help - Show this help message.\n/myinfo - Show your registered info.\n/reset - Delete all your registered info.\n/sponsors - List sponsor registration commands.\n/rewards - Show active reward opportunities.\n/lang [en/tr] - Change language.\n/upload - Upload a photo.\n/filter - Apply contrast adjustment.",
+            sponsor_list_text: "Sponsor Registrations:\n/turkish - Miles&Smiles No\n/mavi - Mavi GSM\n/carrefoursa - C.SA Card/GSM\n/swiss - Swiss Air No\n/carrefour_eu - Carrefour Europe Card\n/tiktak - TikTak GSM\n/trendyol - Trendyol E-mail",
+            rewards_text: "Active Reward Opportunity:\n- CarrefourSA & Algida: 300TL Point Opportunity! (/csa_algida)",
+            my_info_title_basic: "--- Your Basic Info ---",
+            my_info_name: "Name:",
+            my_info_platform: "Platform:",
+            my_info_username: "Username:",
+            my_info_title_sponsor: "--- Your Sponsor Registrations ---",
+            my_info_sponsor_tk: "THY (M&S):",
+            my_info_sponsor_mavi: "Mavi (GSM):",
+            my_info_sponsor_csa: "C.SA (Card/GSM):",
+            my_info_sponsor_swiss: "Swiss Air (No):",
+            my_info_sponsor_ceu: "C. EU (Card):",
+            my_info_sponsor_tiktak: "TikTak (GSM):",
+            my_info_sponsor_trendyol: "Trendyol (Mail):",
+            not_registered: "Not Registered",
+            not_registered_short: "-",
+            unknown_command: (cmd) => `Unknown command: "${cmd}". Type /help for assistance.`,
+            greeting_hello: (name) => `Hello ${name||''}!`,
+            greeting_how_are_you: "I'm doing well, thanks for asking! How are you?",
+            generic_reply_api_off: "Currently, I can only respond to specific commands and greetings, but you can use commands: /help, /sponsors, /rewards",
+            api_fail_generic: "Sorry, I couldn't get a response.",
+            api_fail_error: (err) => `Sorry, I can't answer you right now. Error: ${err}`,
+            content_blocked: (reason) => `Content blocked due to safety reasons: ${reason}`,
+            model_loading: "The model is currently loading, please try again in a few seconds...",
+            lang_set_tr: "Language set to Turkish.",
+            lang_set_en: "Language set to English.",
+            lang_fail: "Unsupported language code. Please use 'en' or 'tr'.",
+            generic_replies: ["I see.", "Hmm, okay.", "Interesting point.", "Noted.", "Alright.", "You can continue...", "Okay, any other topic?"],
+            input_placeholder: "Type your message...",
+            image_uploaded: "Photo uploaded! Press 'Send' to send.",
+            filter_applied: "Contrast adjustment applied!",
+            no_image: "Please upload a photo first!",
+            deepsearching: "Performing search...",
+            deepsearch_prompt: "What would you like to search for?",
+            thinking: (msg) => `Thinking about your message: "${msg}"...`,
+            summarizing: "Summarizing the conversation...",
+            button_send: "Send",
+            button_upload: "Upload",
+            button_contrast: "Contrast",
+            button_search: "Search",
+            button_think: "Think",
+            button_summarize: "Summarize",
+            button_theme: "Theme"
+        },
         tr: { 
             welcome_new: "Avrupa'nın sponsor markalarla ilk ve tek tam entegre yapay zeka botu KyrosilRewards'a hoş geldin! ✨",
             ask_name: "Seninle tanışmak istiyorum, adın nedir?",
@@ -115,70 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
             filter_applied: "Kontrast ayarı uygulandı!",
             no_image: "Önce bir fotoğraf yükleyin!",
             deepsearching: "Arama yapılıyor...",
-            thinking: "Düşünüyorum..."
-        },
-        en: { 
-            welcome_new: "Welcome to KyrosilRewards, Europe's first and only fully integrated AI bot with sponsor brands! ✨",
-            ask_name: "I'd like to get to know you, what is your name?",
-            ask_social: (name) => `Welcome back ${name}! Which social media platform do you follow us from? (Instagram, EU Portal, X, Tiktok)`,
-            ask_username: (social) => `Great, glad you follow us via ${social}! What is your username there?`,
-            onboarding_complete: (name) => `Thanks ${name}! All your information has been saved.`,
-            welcome_back: (name) => `Welcome back, ${name}! If you're ready for great collaborations and rewards, you can type /rewards for current opportunities or /sponsors to see sponsor registration commands. /help is always there for other commands. To change language, type /lang [en/tr]. Or let's just chat!`,
-            prompt_social: "Please type one of the platforms from the list (Instagram, EU Portal, X, Tiktok)",
-            reset_confirm: "Are you sure? All your registered information (onboarding and sponsor) will be deleted. Type 'Yes' to confirm.",
-            reset_done: "All your registered information (onboarding and sponsor) has been deleted.",
-            reset_cancel: "Operation cancelled.",
-            prompt_tk: "Please enter your Miles&Smiles membership number (starting with TK):",
-            confirm_tk: (tkNo) => `Your Miles&Smiles (${tkNo}) registration has been received. Stay tuned for special offers!`,
-            prompt_mavi: "Please enter your GSM number registered to Mavi Kartuş Kart:",
-            confirm_mavi: (gsm) => `Your Mavi Kartuş (${gsm}) GSM registration has been received. You will be informed about campaigns!`,
-            prompt_carrefoursa: "Please enter your CarrefourSA card number or registered GSM number:",
-            confirm_carrefoursa: (info) => `Your CarrefourSA (${info}) information has been saved. You will be informed about relevant campaigns!`,
-            prompt_swissair: "Please enter your Swiss Air special passenger program number:",
-            confirm_swissair: (no) => `Your Swiss Air (${no}) passenger program registration has been received. Have a good flight!`,
-            prompt_carrefour_eu: "Please enter your Carrefour Card (Europe) number:",
-            confirm_carrefour_eu: (no) => `Your Carrefour Europe (${no}) card information has been saved. Stay tuned for regional campaigns!`,
-            prompt_tiktak: "Please enter your GSM number registered to TikTak:",
-            confirm_tiktak: (gsm) => `Your TikTak (${gsm}) registration has been received. Good luck with your usage!`,
-            prompt_trendyol: "Please enter your e-mail address registered to Trendyol:",
-            confirm_trendyol: (mail) => `Your Trendyol (${mail}) e-mail address has been saved. Check your account for special discounts!`,
-            prompt_csa_algida: "Please enter your CarrefourSA Card registered GSM number or Card number (Algida Campaign):",
-            confirm_csa_algida: (num) => `Your participation is received! Our automated systems will credit the 300 TL worth of Algida points to your card for the number (${num}) shortly.`,
-            help_text: "Available Commands:\n/help - Show this help message.\n/myinfo - Show your registered info.\n/reset - Delete all your registered info.\n/sponsors - List sponsor registration commands.\n/rewards - Show active reward opportunities.\n/lang [en/tr] - Change language.\n/upload - Upload a photo.\n/filter - Apply contrast adjustment.",
-            sponsor_list_text: "Sponsor Registrations:\n/turkish - Miles&Smiles No\n/mavi - Mavi GSM\n/carrefoursa - C.SA Card/GSM\n/swiss - Swiss Air No\n/carrefour_eu - Carrefour Europe Card\n/tiktak - TikTak GSM\n/trendyol - Trendyol E-mail",
-            rewards_text: "Active Reward Opportunity:\n- CarrefourSA & Algida: 300TL Point Opportunity! (/csa_algida)",
-            my_info_title_basic: "--- Your Basic Info ---",
-            my_info_name: "Name:",
-            my_info_platform: "Platform:",
-            my_info_username: "Username:",
-            my_info_title_sponsor: "--- Your Sponsor Registrations ---",
-            my_info_sponsor_tk: "THY (M&S):",
-            my_info_sponsor_mavi: "Mavi (GSM):",
-            my_info_sponsor_csa: "C.SA (Card/GSM):",
-            my_info_sponsor_swiss: "Swiss Air (No):",
-            my_info_sponsor_ceu: "C. EU (Card):",
-            my_info_sponsor_tiktak: "TikTak (GSM):",
-            my_info_sponsor_trendyol: "Trendyol (Mail):",
-            not_registered: "Not Registered",
-            not_registered_short: "-",
-            unknown_command: (cmd) => `Unknown command: "${cmd}". Type /help for assistance.`,
-            greeting_hello: (name) => `Hello ${name||''}!`,
-            greeting_how_are_you: "I'm doing well, thanks for asking! How are you?",
-            generic_reply_api_off: "Currently, I can only respond to specific commands and greetings, but you can use commands: /help, /sponsors, /rewards",
-            api_fail_generic: "Sorry, I couldn't get a response.",
-            api_fail_error: (err) => `Sorry, I can't answer you right now. Error: ${err}`,
-            content_blocked: (reason) => `Content blocked due to safety reasons: ${reason}`,
-            model_loading: "The model is currently loading, please try again in a few seconds...",
-            lang_set_tr: "Dil Türkçe olarak ayarlandı.",
-            lang_set_en: "Language set to English.",
-            lang_fail: "Unsupported language code. Please use 'en' or 'tr'.",
-            generic_replies: ["I see.", "Hmm, okay.", "Interesting point.", "Noted.", "Alright.", "You can continue...", "Okay, any other topic?"],
-            input_placeholder: "Type your message...",
-            image_uploaded: "Photo uploaded! Press 'Send' to send.",
-            filter_applied: "Contrast adjustment applied!",
-            no_image: "Please upload a photo first!",
-            deepsearching: "Searching...",
-            thinking: "Thinking..."
+            deepsearch_prompt: "Neyi aramak istersin?",
+            thinking: (msg) => `Şu mesajı düşünüyorum: "${msg}"...`,
+            summarizing: "Sohbet özetleniyor...",
+            button_send: "Gönder",
+            button_upload: "Yükle",
+            button_contrast: "Kontrast",
+            button_search: "Ara",
+            button_think: "Düşün",
+            button_summarize: "Özetle",
+            button_theme: "Tema"
         }
     };
 
@@ -228,9 +249,19 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
-    function applyTheme() { document.body.classList.toggle('light-mode', isLightMode); }
+    function applyTheme() {
+        document.body.classList.toggle('light-mode', isLightMode);
+        saveData(THEME_KEY, isLightMode ? 'light' : 'dark');
+    }
     function updateStaticTexts() {
         if (userInput) userInput.placeholder = translations[currentLang].input_placeholder;
+        if (sendButton) sendButton.textContent = translations[currentLang].button_send;
+        if (uploadButton) uploadButton.textContent = translations[currentLang].button_upload;
+        if (filterButton) filterButton.textContent = translations[currentLang].button_contrast;
+        if (deepsearchButton) deepsearchButton.textContent = translations[currentLang].button_search;
+        if (thinkButton) thinkButton.textContent = translations[currentLang].button_think;
+        if (summarizeButton) summarizeButton.textContent = translations[currentLang].button_summarize;
+        if (toggleTheme) toggleTheme.textContent = translations[currentLang].button_theme;
     }
 
     // --- Fotoğraf İşleme ---
@@ -263,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Gemini API'ye hem metni hem de görseli gönder
             const base64Image = pendingImage.split(',')[1];
-            const response = await getGeminiResponseWithImage(userMessage || "Bu görseli analiz et.", base64Image);
+            const response = await getGeminiResponseWithImage(userMessage || "Analyze this image.", base64Image);
             addMessage(response || translations[currentLang].api_fail_generic, 'model');
 
             imagePreview.style.display = 'none';
@@ -306,13 +337,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 role: 'user',
                 parts: [
                     { text: text },
-                    { inlineData: { data: base64Image, mimeType: 'image/jpeg' } }
+                    {
+                        inline_data: {
+                            mime_type: 'image/jpeg',
+                            data: base64Image
+                        }
+                    }
                 ]
             }]
         };
         try {
             if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_GEMINI_API_ANAHTARIN') {
-                throw new Error(translations[currentLang].api_fail_error("API Anahtarı ayarlanmamış veya geçersiz."));
+                throw new Error(translations[currentLang].api_fail_error("API key is not set or invalid."));
             }
             const response = await fetch(GEMINI_API_URL, {
                 method: 'POST',
@@ -321,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`);
+                throw new Error(`API Error: ${response.status} - ${errorData?.error?.message || response.statusText}`);
             }
             const data = await response.json();
             if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
@@ -331,32 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return translations[currentLang].api_fail_generic;
         } catch (error) {
-            console.error('Gemini API hatası:', error);
+            console.error('Gemini API error:', error);
             return translations[currentLang].api_fail_error(error.message);
         }
     }
-
-    // DeepSearch ve Think
-    deepsearchButton.addEventListener('click', async () => {
-        const lastMessage = chatHistory[chatHistory.length - 1]?.parts[0]?.text;
-        if (lastMessage) {
-            addMessage(translations[currentLang].deepsearching, 'model');
-            const searchPrompt = `Web'de "${lastMessage}" ile ilgili özet bir bilgi ara.`;
-            const response = await getGeminiResponse(searchPrompt);
-            addMessage(response || translations[currentLang].api_fail_generic, 'model');
-        }
-    });
-
-    thinkButton.addEventListener('click', async () => {
-        const lastMessage = chatHistory[chatHistory.length - 1]?.parts[0]?.text;
-        if (lastMessage) {
-            addMessage(translations[currentLang].thinking, 'model');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            const thinkPrompt = `Şu mesajı detaylı bir şekilde analiz et ve derinlemesine bir cevap ver: "${lastMessage}"`;
-            const response = await getGeminiResponse(thinkPrompt);
-            addMessage(response || translations[currentLang].api_fail_generic, 'model');
-        }
-    });
 
     // Gemini API ile Metin Yanıtı
     async function getGeminiResponse(prompt) {
@@ -368,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_GEMINI_API_ANAHTARIN') {
-                throw new Error(translations[currentLang].api_fail_error("API Anahtarı ayarlanmamış veya geçersiz."));
+                throw new Error(translations[currentLang].api_fail_error("API key is not set or invalid."));
             }
             const response = await fetch(GEMINI_API_URL, {
                 method: 'POST',
@@ -377,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`);
+                throw new Error(`API Error: ${response.status} - ${errorData?.error?.message || response.statusText}`);
             }
             const data = await response.json();
             if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
@@ -387,16 +401,58 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return translations[currentLang].api_fail_generic;
         } catch (error) {
-            console.error('Gemini API hatası:', error);
+            console.error('Gemini API error:', error);
             return translations[currentLang].api_fail_error(error.message);
         }
     }
+
+    // Search (Ara)
+    deepsearchButton.addEventListener('click', () => {
+        if (!awaitingSearchQuery) {
+            addMessage(translations[currentLang].deepsearch_prompt, 'model');
+            awaitingSearchQuery = true;
+        }
+    });
+
+    // Think (Düşün)
+    thinkButton.addEventListener('click', async () => {
+        const lastMessage = chatHistory[chatHistory.length - 1]?.parts[0]?.text;
+        if (lastMessage) {
+            addMessage(translations[currentLang].thinking(lastMessage), 'model');
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Daha doğal bir düşünme süresi
+            const thinkPrompt = `Analyze this message in detail and provide a thoughtful response: "${lastMessage}"`;
+            const response = await getGeminiResponse(thinkPrompt);
+            addMessage(response || translations[currentLang].api_fail_generic, 'model');
+        }
+    });
+
+    // Summarize (Özetle)
+    summarizeButton.addEventListener('click', async () => {
+        if (chatHistory.length > 0) {
+            addMessage(translations[currentLang].summarizing, 'model');
+            const summaryPrompt = "Summarize the following conversation:\n" + chatHistory.map(item => `${item.role}: ${item.parts[0].text}`).join('\n');
+            const response = await getGeminiResponse(summaryPrompt);
+            addMessage(response || translations[currentLang].api_fail_generic, 'model');
+        }
+    });
 
     // --- Mesaj Gönderme Ana Mantığı ---
     function sendMessage() {
         if (!userInput) return;
         const messageText = userInput.value.trim();
         if (messageText !== "" || pendingImage) {
+            if (awaitingSearchQuery) {
+                addMessage(messageText, 'user');
+                addMessage(translations[currentLang].deepsearching, 'model');
+                const searchPrompt = `Search the web for a brief summary about "${messageText}".`;
+                getGeminiResponse(searchPrompt).then(response => {
+                    addMessage(response || translations[currentLang].api_fail_generic, 'model');
+                });
+                awaitingSearchQuery = false;
+                userInput.value = '';
+                return;
+            }
+
             if (messageText) {
                 addMessage(messageText, 'user');
                 userInput.value = '';
@@ -606,7 +662,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!greetingHandled) {
                 if (GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_GEMINI_API_ANAHTARIN') {
-                    getGeminiResponse(messageText);
+                    getGeminiResponse(messageText).then(response => {
+                        addMessage(response || translations[currentLang].api_fail_generic, 'model');
+                    });
                 } else {
                     addMessage(translations[currentLang].generic_replies[Math.floor(Math.random() * translations[currentLang].generic_replies.length)], 'model');
                 }
@@ -626,8 +684,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function startConversation() {
         chatHistory = [];
         let initialWelcome = translations[currentLang].welcome_new;
-        if (currentLang === 'tr') initialWelcome += "\n(For English, type /lang en)";
-        else initialWelcome += "\n(Türkçe için /lang tr yazın)";
+        if (currentLang === 'en') initialWelcome += "\n(Türkçe için /lang tr yazın)";
+        else initialWelcome += "\n(For English, type /lang en)";
         addMessage(initialWelcome, 'model');
         if (!currentUserName) {
             addMessage(translations[currentLang].ask_name, 'model', 100);
@@ -649,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUserName = loadData(USER_NAME_KEY);
     currentSocialMedia = loadData(SOCIAL_MEDIA_KEY);
     currentSocialUser = loadData(SOCIAL_USER_KEY);
-    currentLang = loadData(LANG_KEY) || 'tr';
+    currentLang = loadData(LANG_KEY) || 'en';
     updateStaticTexts();
     applyTheme();
     startConversation();
