@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLightMode = loadData(THEME_KEY) === 'light';
     let pendingImage = null; // Gönderilecek fotoğrafı tutmak için
     let awaitingSearchQuery = false;
+    let userStates = {}; // Kullanıcı durumlarını saklamak için obje (ödül sistemi için)
 
     // === Dil Metinleri ===
     const translations = {
@@ -82,11 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
             confirm_tiktak: (gsm) => `Your TikTak (${gsm}) registration has been received. Good luck with your usage!`,
             prompt_trendyol: "Please enter your e-mail address registered to Trendyol:",
             confirm_trendyol: (mail) => `Your Trendyol (${mail}) e-mail address has been saved. Check your account for special discounts!`,
-            prompt_csa_algida: "Please enter your CarrefourSA Card registered GSM number or Card number (Algida Campaign):",
-            confirm_csa_algida: (num) => `Your participation is received! Our automated systems will credit the 300 TL worth of Algida points to your card for the number (${num}) shortly.`,
+            prompt_trendyol_gsm: "Hello! 🎉 To claim your reward, please share your GSM number registered with Trendyol. 📱", // Ödül için GSM isteme
+            question_trendyol: "Time to test your knowledge! 🎓 Question: Who was the first King of Greece that failed to expand Greek territory at the expense of the Ottoman Empire and was dethroned? (You have 3 attempts!)", // Ödül sorusu
+            trendyol_success: "Congratulations! 🎊 Your 10 EURO Trendyol gift code will be credited to your account shortly.", // Ödül kazanma mesajı
+            trendyol_wrong: (attempts) => `Wrong answer. 😔 Attempts left: ${attempts}. Try again!`, // Yanlış cevap mesajı
+            trendyol_failed: "Sorry, you’ve used all 3 attempts. The correct answer was King Otto. Your reward opportunity has ended. 😢", // Hak bitince mesaj
+            trendyol_expired: "Sorry, the reward campaign has expired. ⏰", // Süre bitince mesaj
             help_text: "Available Commands:\n/help - Show this help message.\n/myinfo - Show your registered info.\n/reset - Delete all your registered info.\n/sponsors - List sponsor registration commands.\n/rewards - Show active reward opportunities.\n/lang [en/tr] - Change language.\n/upload - Upload a photo.\n/filter - Apply contrast adjustment.",
             sponsor_list_text: "Sponsor Registrations:\n/turkish - Miles&Smiles No\n/mavi - Mavi GSM\n/carrefoursa - C.SA Card/GSM\n/swiss - Swiss Air No\n/carrefour_eu - Carrefour Europe Card\n/tiktak - TikTak GSM\n/trendyol - Trendyol E-mail",
-            rewards_text: "Active Reward Opportunity:\n- CarrefourSA & Algida: 300TL Point Opportunity! (/csa_algida)",
+            rewards_text: "Active Reward Opportunity:\n- Trendyol & KyrosilRewards: 10 EURO Gift Code Opportunity! (/trendyolxkyrosilrewards)", // Güncellenmiş ödül metni
             my_info_title_basic: "--- Your Basic Info ---",
             my_info_name: "Name:",
             my_info_platform: "Platform:",
@@ -154,11 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
             confirm_tiktak: (gsm) => `TikTak (${gsm}) GSM kaydınız alındı. Kullanımlarınızda bol şans!`,
             prompt_trendyol: "Lütfen Trendyol'a kayıtlı e-posta adresinizi girin:",
             confirm_trendyol: (mail) => `Trendyol (${mail}) e-posta adresiniz kaydedildi. Özel indirimler için hesabınızı kontrol edin!`,
-            prompt_csa_algida: "Lütfen CarrefourSA Kart'a kayıtlı GSM numaranızı veya Kart numaranızı girin (Algida Kampanyası):",
-            confirm_csa_algida: (num) => `Katılımınız alındı! Girdiğiniz numara (${num}) için kısa süre içerisinde otomatik sistemlerimiz kartınıza 300 TL değerindeki Algida puanını tanımlayacaktır.`,
+            prompt_trendyol_gsm: "Merhaba! 🎉 Ödül kazanmak için Trendyol’a kayıtlı GSM numaranızı paylaşır mısınız? 📱", // Ödül için GSM isteme
+            question_trendyol: "Şimdi bilgini test etme zamanı! 🎓 Soru: Yunanistan topraklarını Osmanlı Devleti aleyhine genişletme çabalarında başarıya ulaşamamış ve tahttan indirilmiş olan ilk Yunanistan Krallığı kralı kimdir? (3 hakkın var!)", // Ödül sorusu
+            trendyol_success: "Tebrikler! 🎊 Kısa süre içerisinde 300 TL değerinde Trendyol Yemek hediyeniz hesabınıza tanımlanacaktır.", // Ödül kazanma mesajı
+            trendyol_wrong: (attempts) => `Yanlış cevap. 😔 Kalan hakkın: ${attempts}. Tekrar dene!`, // Yanlış cevap mesajı
+            trendyol_failed: "Üzgünüz, 3 hakkınızı da kullandınız. Doğru cevap: Kral Otto. Ödül hakkınız sona erdi. 😢", // Hak bitince mesaj
+            trendyol_expired: "Üzgünüz, ödül kampanyasının süresi dolmuştur. ⏰", // Süre bitince mesaj
             help_text: "Kullanılabilir Komutlar:\n/help - Yardım.\n/myinfo - Bilgilerini gösterir.\n/reset - Bilgilerini siler.\n/sponsors - Sponsor komutları.\n/rewards - Ödül fırsatları.\n/lang [en/tr] - Dil değiştirir.\n/upload - Fotoğraf yükler.\n/filter - Kontrast ayarı yapar.",
             sponsor_list_text: "Sponsor Kayıtları:\n/turkish - Miles&Smiles No\n/mavi - Mavi GSM\n/carrefoursa - C.SA Kart/GSM\n/swiss - Swiss Air No\n/carrefour_eu - C. EU Kart\n/tiktak - TikTak GSM\n/trendyol - Trendyol E-posta",
-            rewards_text: "Aktif Ödül Fırsatı:\n- CarrefourSA & Algida: 300TL Değerinde Puan Fırsatı! (/csa_algida)",
+            rewards_text: "Aktif Ödül Fırsatı:\n- Trendyol & KyrosilRewards: 300 TL Değerinde Yemek Hediyesi Fırsatı! (/trendyolxkyrosilrewards)", // Güncellenmiş ödül metni
             my_info_title_basic: "--- Temel Bilgilerin ---",
             my_info_name: "İsim:",
             my_info_platform: "Platform:",
@@ -203,6 +212,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- Süre kontrolü için tarih ve saat (Ödül sistemi için) ---
+    const rewardEndTimeTR = new Date('2025-05-07T21:00:00+03:00'); // TSİ 21:00
+    const rewardEndTimeEN = new Date('2025-05-07T20:00:00+01:00'); // CET 20:00 (TSİ 22:00)
+
+    function isRewardActive() {
+        const now = new Date();
+        const endTime = currentLang === 'tr' ? rewardEndTimeTR : rewardEndTimeEN;
+        return now < endTime;
+    }
+
     // --- Temel Fonksiyonlar ---
     function saveData(key, value) { try { localStorage.setItem(key, value); console.log(`kaydedildi: ${key}=${value}`); } catch (e) { console.error("kayıt hatası:", e); } }
     function loadData(key) { try { return localStorage.getItem(key); } catch (e) { console.error("okuma hatası:", e); return null; } }
@@ -215,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         removeData(CARREFOUR_EU_KEY);
         removeData(TIKTAK_GSM_KEY);
         removeData(TRENDYOL_EMAIL_KEY);
+        // CSA_ALGIDA_KEY artık kullanılmıyor, ama silme işlemi için bırakıyorum
         removeData(CSA_ALGIDA_KEY);
     }
     function addMessage(text, role, imageSrc = null) {
@@ -539,9 +559,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 addMessage(translations[currentLang].prompt_trendyol, 'model');
                 conversationState = 'awaiting_trendyol_email';
                 break;
-            case 'csa_algida':
-                addMessage(translations[currentLang].prompt_csa_algida, 'model');
-                conversationState = 'awaiting_carrefour_no';
+            case 'trendyolxkyrosilrewards':
+                if (!isRewardActive()) {
+                    addMessage(translations[currentLang].trendyol_expired, 'model');
+                    return;
+                }
+
+                if (!userStates[currentUserName]) {
+                    userStates[currentUserName] = {
+                        step: 'initial',
+                        gsm: null,
+                        attempts: 3,
+                    };
+                }
+
+                const userState = userStates[currentUserName];
+
+                if (userState.step === 'initial') {
+                    addMessage(translations[currentLang].prompt_trendyol_gsm, 'model');
+                    userState.step = 'awaiting_trendyol_gsm';
+                    conversationState = 'awaiting_trendyol_gsm';
+                }
                 break;
             case 'lang':
                 if (args.length > 0 && (args[0] === 'en' || args[0] === 'tr')) {
@@ -644,11 +682,36 @@ document.addEventListener('DOMContentLoaded', () => {
             saveData(TRENDYOL_EMAIL_KEY, trendyolMail);
             addMessage(translations[currentLang].confirm_trendyol(trendyolMail), 'model');
             conversationState = 'idle';
-        } else if (conversationState === 'awaiting_carrefour_no') {
-            const enteredNumber = messageText;
-            saveData(CSA_ALGIDA_KEY, enteredNumber);
-            addMessage(translations[currentLang].confirm_csa_algida(enteredNumber), 'model');
-            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_trendyol_gsm') {
+            const userState = userStates[currentUserName];
+            // Basit bir GSM format kontrolü
+            if (/^\+?\d{10,12}$/.test(messageText)) {
+                userState.gsm = messageText;
+                addMessage(translations[currentLang].question_trendyol, 'model');
+                userState.step = 'awaiting_trendyol_answer';
+                conversationState = 'awaiting_trendyol_answer';
+            } else {
+                addMessage(currentLang === 'tr' ? 'Lütfen geçerli bir GSM numarası girin (örneğin: +905xxxxxxxxx).' : 'Please enter a valid GSM number (e.g., +905xxxxxxxxx).', 'model');
+            }
+        } else if (conversationState === 'awaiting_trendyol_answer') {
+            const userState = userStates[currentUserName];
+            const correctAnswer = ['otto', 'kral otto', 'otto i'];
+            const userAnswer = messageText.toLowerCase().trim();
+
+            if (correctAnswer.includes(userAnswer)) {
+                addMessage(translations[currentLang].trendyol_success, 'model');
+                userState.step = 'completed';
+                conversationState = 'idle';
+            } else {
+                userState.attempts -= 1;
+                if (userState.attempts > 0) {
+                    addMessage(translations[currentLang].trendyol_wrong(userState.attempts), 'model');
+                } else {
+                    addMessage(translations[currentLang].trendyol_failed, 'model');
+                    userState.step = 'failed';
+                    conversationState = 'idle';
+                }
+            }
         } else if (conversationState === 'idle') {
             const lowerCaseInput = messageText.toLowerCase();
             let greetingHandled = true;
