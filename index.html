@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,30 +8,30 @@
 </head>
 <body>
     <div id="chat-container">
-        <img src="indir.png" alt="KyrosilRewards Logosu" id="header-logo"> 
         <h1 id="chat-title">KyrosilRewards Bot</h1>
         <div id="chat-box"></div>
         
         <div id="image-preview" style="display: none; text-align: center;">
             <img id="preview-img" style="max-width: 100%; max-height: 300px;" />
-            <button id="send-photo-button" class="action-button">Gönder</button>
+            <button id="send-photo-button" class="action-button">Send</button>
         </div>
         
         <div id="input-area">
-            <input type="text" id="user-input" placeholder="Mesajınızı yazın...">
-            <button id="send-button" class="action-button">Gönder</button>
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button" class="action-button">Send</button>
             <input type="file" id="image-upload" accept="image/*" style="display: none;">
-            <button id="upload-button" class="action-button">Yükle</button>
-            <button id="filter-button" class="action-button" style="display: none;">Kontrast</button>
+            <button id="upload-button" class="action-button">Upload</button>
+            <button id="filter-button" class="action-button" style="display: none;">Contrast</button>
         </div>
         
         <div id="control-bar">
-            <button id="deepsearch-button" class="control-button">Ara</button>
-            <button id="think-button" class="control-button">Düşün</button>
+            <button id="deepsearch-button" class="control-button">Search</button>
+            <button id="think-button" class="control-button">Think</button>
+            <button id="summarize-button" class="control-button">Summarize</button>
             <select id="bot-mode" class="mode-select">
                 <option value="kyrosil">KyrosilRewards SUPER</option>
             </select>
-            <button id="toggle-theme" class="control-button">Tema</button>
+            <button id="toggle-theme" class="control-button">Theme</button>
         </div>
     </div>
 
