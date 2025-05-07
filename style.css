@@ -249,8 +249,8 @@ body.light-mode #user-input { background: #f5f8fa; border-color: #ced4da; color:
 /* Kontrol çubuğu */
 #control-bar {
     display: flex;
+    flex-direction: column; /* Mobil için dikey düzen */
     align-items: center;
-    justify-content: space-between;
     padding: 10px 20px;
     background: #2a3b55;
     border-top: 1px solid #465c71;
@@ -258,18 +258,36 @@ body.light-mode #user-input { background: #f5f8fa; border-color: #ced4da; color:
 }
 body.light-mode #control-bar { background: #ffffff; border-color: #d9e2ec; }
 
+/* Üst Kontrol Grubu (Search, Think, Summarize) */
+#control-bar .top-controls {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* Alt Kontrol Grubu (Theme) */
+#control-bar .bottom-controls {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 /* Kontrol butonları */
 .control-button {
-    padding: 8px 16px;
+    padding: 8px 12px;
     background: linear-gradient(135deg, #34495e, #2a3b55);
     color: #ecf0f1;
     border: none;
     border-radius: 20px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
     transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    flex: 1;
+    min-width: 60px;
+    margin: 0 4px;
 }
 .control-button:hover { 
     transform: scale(1.05); 
@@ -280,13 +298,14 @@ body.light-mode .control-button { background: linear-gradient(135deg, #e6ecef, #
 
 /* Model seçici */
 .mode-select {
-    padding: 8px 16px;
+    padding: 8px 12px;
     background: #34495e;
     border: 1px solid #465c71;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #ecf0f1;
     transition: background 0.5s ease, border-color 0.5s ease, color 0.5s ease;
+    max-width: 150px; /* Upload butonu ile uyumlu genişlik */
 }
 body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color: #2a3b55; }
 
@@ -296,31 +315,27 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
     #chat-container { height: 100%; max-height: none; border-radius: 0; margin: 0; box-shadow: none; }
     #chat-box { padding: 15px; }
     .message { max-width: 90%; }
-    #input-area { padding: 10px 15px; gap: 8px; }
-    #user-input { padding: 10px 16px; font-size: 0.9rem; }
-    .action-button { padding: 8px 16px; font-size: 0.85rem; }
+    #input-area { 
+        padding: 10px 15px; 
+        gap: 5px; 
+        align-items: center; 
+    }
+    #user-input { 
+        padding: 8px 12px; 
+        font-size: 0.85rem; 
+    }
+    .action-button { 
+        padding: 6px 12px; 
+        font-size: 0.75rem; 
+    }
     #chat-title { font-size: 1.3em; margin: 15px 0; }
     .timestamp { font-size: 0.65em; bottom: 3px; right: 8px; }
-    #control-bar { 
-        padding: 8px 15px; 
-        flex-wrap: wrap; /* Butonlar taşarsa alt satıra geçsin */
-        gap: 8px; /* Butonlar arasında boşluk */
-        justify-content: center; /* Butonları ortala */
+    #input-area { 
+        flex-wrap: nowrap; /* Yatay hizalamayı koru */
     }
-    .control-button { 
-        padding: 6px 10px; 
-        font-size: 0.75rem; /* Daha küçük yazı boyutu */
-        flex: 1; /* Butonlar eşit genişlikte */
-        min-width: 60px; /* Minimum genişlik */
-    }
-    .mode-select { 
-        padding: 6px 8px; 
-        font-size: 0.75rem; 
-        max-width: 120px; /* Mobilde taşmayı önlemek için maksimum genişlik */
-        flex: 1; 
-        text-overflow: ellipsis; /* Uzun metni kes */
-        overflow: hidden; 
-        white-space: nowrap; 
+    #input-area .mode-select {
+        margin-left: auto; /* Boşluğu doldur */
+        margin-right: 5px; /* Upload ile boşluk */
     }
     .header-logo {
         height: 30px;
@@ -331,5 +346,33 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
     .message.bot-message::before {
         width: 25px;
         height: 25px;
+    }
+    #control-bar .top-controls .control-button {
+        margin: 0 2px; /* Daha sıkı düzen */
+    }
+    #control-bar .bottom-controls .control-button {
+        margin: 0 2px;
+    }
+}
+
+/* Web için stil (600px üzeri) */
+@media (min-width: 601px) {
+    #input-area { 
+        flex-wrap: nowrap; 
+    }
+    #control-bar {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    #control-bar .top-controls,
+    #control-bar .bottom-controls {
+        display: flex;
+        width: auto;
+    }
+    #control-bar .top-controls {
+        flex-grow: 1;
+    }
+    #control-bar .bottom-controls {
+        margin-left: 10px;
     }
 }
