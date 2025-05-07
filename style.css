@@ -138,6 +138,10 @@ body.light-mode .message.bot-message div { background: linear-gradient(135deg, #
     left: 0;
     top: 0;
 }
+/* Varsayılan veya dinamik avatarları gizle */
+.message.bot-message img:not([class="header-logo"]) {
+    display: none;
+}
 
 /* Kullanıcı mesajlarının stilleri */
 .message.user-message {
@@ -297,9 +301,27 @@ body.light-mode .mode-select { background: #f5f8fa; border-color: #ced4da; color
     .action-button { padding: 8px 16px; font-size: 0.85rem; }
     #chat-title { font-size: 1.3em; margin: 15px 0; }
     .timestamp { font-size: 0.65em; bottom: 3px; right: 8px; }
-    #control-bar { padding: 8px 15px; }
-    .control-button { padding: 6px 12px; font-size: 0.85rem; }
-    .mode-select { padding: 6px 12px; font-size: 0.85rem; }
+    #control-bar { 
+        padding: 8px 15px; 
+        flex-wrap: wrap; /* Butonlar taşarsa alt satıra geçsin */
+        gap: 8px; /* Butonlar arasında boşluk */
+        justify-content: center; /* Butonları ortala */
+    }
+    .control-button { 
+        padding: 6px 10px; 
+        font-size: 0.75rem; /* Daha küçük yazı boyutu */
+        flex: 1; /* Butonlar eşit genişlikte */
+        min-width: 60px; /* Minimum genişlik */
+    }
+    .mode-select { 
+        padding: 6px 8px; 
+        font-size: 0.75rem; 
+        max-width: 120px; /* Mobilde taşmayı önlemek için maksimum genişlik */
+        flex: 1; 
+        text-overflow: ellipsis; /* Uzun metni kes */
+        overflow: hidden; 
+        white-space: nowrap; 
+    }
     .header-logo {
         height: 30px;
     }
