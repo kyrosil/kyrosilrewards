@@ -129,7 +129,7 @@ body.light-mode .message.bot-message div { background: linear-gradient(135deg, #
 .message.bot-message p { margin: 0; margin-bottom: 18px; }
 .message.bot-message::before {
     content: '';
-    background: url('https://github.com/kullanıcıadı/reponame/raw/main/indir.png') no-repeat center center;
+    background: url('https://github.com/kyrosil/kyrosilrewards/raw/main/indir.png') no-repeat center center;
     background-size: cover;
     width: 30px;
     height: 30px;
