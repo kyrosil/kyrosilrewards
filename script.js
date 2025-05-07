@@ -1,6 +1,6 @@
 // === DOMContentLoaded Olay Dinleyicisi Başlangıcı ===
 document.addEventListener('DOMContentLoaded', () => {
-    console.log(">>> Kyrosil Bot FINAL (v167) çalıştı! <<<");
+    console.log(">>> Kyrosil Bot FINAL (v168) çalıştı! <<<");
 
     // Gerekli HTML elementlerini seçiyoruz
     const chatBox = document.getElementById('chat-box');
@@ -23,11 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("HTML elementleri başarıyla bulundu.");
     }
 
-    // API Anahtarları (Kendi anahtarlarını ekle!)
+    // API Anahtarları (Kendi anahtarını ekle!)
     const GEMINI_API_KEY = 'AIzaSyDiMIy8gM65-DWVlneXq4oKW4lCqwK0nK4'; // Gemini için
-    const GOOGLE_VISION_API_KEY = 'AIzaSyB0V8A1n61F8HQKZZlZ1-2CMd4y7VUJchM'; // Google Vision için
     const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
-    const GOOGLE_VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate?key=" + GOOGLE_VISION_API_KEY;
 
     // localStorage için anahtar (key) tanımları
     const USER_NAME_KEY = 'kyrosil_userName'; 
@@ -51,7 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUserName, currentSocialMedia, currentSocialUser;
     let currentLang = loadData(LANG_KEY) || 'tr';
     let originalImage = null;
-    let isDarkMode = false;
+    let isLightMode = false;
+    let pendingImage = null; // Gönderilecek fotoğrafı tutmak için
 
     // === Dil Metinleri ===
     const translations = {
@@ -112,10 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
             lang_fail: "Desteklenmeyen dil kodu. Lütfen 'en' veya 'tr' kullanın.",
             generic_replies: ["Anladım.", "Hmm, peki.", "İlginç.", "Tamamdır.", "Devam et...", "Peki."],
             input_placeholder: "Mesajınızı yazın...",
-            image_uploaded: "Fotoğraf yüklendi! Göndermek için ✈️ tuşuna basın.",
+            image_uploaded: "Fotoğraf yüklendi! Göndermek için 'Gönder' tuşuna basın.",
             filter_applied: "Kontrast ayarı uygulandı!",
             no_image: "Önce bir fotoğraf yükleyin!",
-            deepsearching: "Derin arama yapılıyor...",
+            deepsearching: "Arama yapılıyor...",
             thinking: "Düşünüyorum..."
         },
         en: { 
@@ -175,10 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
             lang_fail: "Unsupported language code. Please use 'en' or 'tr'.",
             generic_replies: ["I see.", "Hmm, okay.", "Interesting point.", "Noted.", "Alright.", "You can continue...", "Okay, any other topic?"],
             input_placeholder: "Type your message...",
-            image_uploaded: "Photo uploaded! Press ✈️ to send.",
+            image_uploaded: "Photo uploaded! Press 'Send' to send.",
             filter_applied: "Contrast adjustment applied!",
             no_image: "Please upload a photo first!",
-            deepsearching: "Performing deep search...",
+            deepsearching: "Searching...",
             thinking: "Thinking..."
         }
     };
@@ -223,13 +222,13 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.appendChild(contentWrapper);
         chatBox.appendChild(messageElement);
         if (role === 'user' || role === 'model') {
-            chatHistory.push({ role, parts: [{ text, imageSrc }] });
+            chatHistory.push({ role, parts: [{ text: text || '', imageSrc }] });
             if (chatHistory.length > MAX_HISTORY_LENGTH) chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH);
         }
         scrollToBottom();
     }
     function scrollToBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
-    function applyTheme() { document.body.classList.toggle('dark-mode', isDarkMode); }
+    function applyTheme() { document.body.classList.toggle('light-mode', isLightMode); }
     function updateStaticTexts() {
         if (userInput) userInput.placeholder = translations[currentLang].input_placeholder;
     }
@@ -243,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.onload = (e) => {
                 originalImage = e.target.result;
                 previewImg.src = originalImage;
+                pendingImage = originalImage; // Gönderilecek fotoğrafı sakla
                 imagePreview.style.display = 'block';
                 filterButton.style.display = 'inline-block';
                 sendPhotoButton.style.display = 'inline-block';
@@ -253,13 +253,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     sendPhotoButton.addEventListener('click', async () => {
-        if (previewImg.src) {
-            addMessage(null, 'user', previewImg.src);
-            const visionResponse = await analyzeImageWithGoogleVision(previewImg.src);
-            addMessage(visionResponse || translations[currentLang].api_fail_generic, 'model');
+        if (pendingImage) {
+            addMessage(null, 'user', pendingImage);
+            const userMessage = userInput.value.trim();
+            if (userMessage) {
+                addMessage(userMessage, 'user');
+                userInput.value = '';
+            }
+
+            // Gemini API'ye hem metni hem de görseli gönder
+            const base64Image = pendingImage.split(',')[1];
+            const response = await getGeminiResponseWithImage(userMessage || "Bu görseli analiz et.", base64Image);
+            addMessage(response || translations[currentLang].api_fail_generic, 'model');
+
             imagePreview.style.display = 'none';
             filterButton.style.display = 'none';
             sendPhotoButton.style.display = 'none';
+            pendingImage = null;
         }
     });
 
@@ -283,33 +293,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 ctx.putImageData(imageData, 0, 0);
                 previewImg.src = canvas.toDataURL();
+                pendingImage = canvas.toDataURL(); // Güncellenmiş görseli sakla
                 addMessage(translations[currentLang].filter_applied, 'model');
             };
         }
     });
 
-    // Google Vision API ile Görsel Analizi
-    async function analyzeImageWithGoogleVision(imageBase64) {
-        const base64Data = imageBase64.split(',')[1];
-        const request = {
-            requests: [{
-                image: { content: base64Data },
-                features: [{ type: "LABEL_DETECTION", maxResults: 5 }]
+    // Gemini API ile Görsel ve Metin Analizi
+    async function getGeminiResponseWithImage(text, base64Image) {
+        const payload = {
+            contents: [{
+                role: 'user',
+                parts: [
+                    { text: text },
+                    { inlineData: { data: base64Image, mimeType: 'image/jpeg' } }
+                ]
             }]
         };
         try {
-            const response = await fetch(GOOGLE_VISION_API_URL, {
+            if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_GEMINI_API_ANAHTARIN') {
+                throw new Error(translations[currentLang].api_fail_error("API Anahtarı ayarlanmamış veya geçersiz."));
+            }
+            const response = await fetch(GEMINI_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(request)
+                body: JSON.stringify(payload)
             });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`);
+            }
             const data = await response.json();
-            if (data.responses[0].labelAnnotations) {
-                return data.responses[0].labelAnnotations.map(a => a.description).join(', ');
+            if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+                return data.candidates[0].content.parts[0].text;
+            } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+                return translations[currentLang].content_blocked(data.promptFeedback.blockReason);
             }
             return translations[currentLang].api_fail_generic;
         } catch (error) {
-            console.error('Vision API hatası:', error);
+            console.error('Gemini API hatası:', error);
             return translations[currentLang].api_fail_error(error.message);
         }
     }
@@ -319,8 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastMessage = chatHistory[chatHistory.length - 1]?.parts[0]?.text;
         if (lastMessage) {
             addMessage(translations[currentLang].deepsearching, 'model');
-            const searchResult = await webSearch(lastMessage);
-            addMessage(searchResult || translations[currentLang].api_fail_generic, 'model');
+            const searchPrompt = `Web'de "${lastMessage}" ile ilgili özet bir bilgi ara.`;
+            const response = await getGeminiResponse(searchPrompt);
+            addMessage(response || translations[currentLang].api_fail_generic, 'model');
         }
     });
 
@@ -329,306 +352,275 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lastMessage) {
             addMessage(translations[currentLang].thinking, 'model');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const thinkResponse = await getGeminiThinkResponse(lastMessage);
-            addMessage(thinkResponse || translations[currentLang].api_fail_generic, 'model');
+            const thinkPrompt = `Şu mesajı detaylı bir şekilde analiz et ve derinlemesine bir cevap ver: "${lastMessage}"`;
+            const response = await getGeminiResponse(thinkPrompt);
+            addMessage(response || translations[currentLang].api_fail_generic, 'model');
         }
     });
 
-    async function webSearch(query) {
+    // Gemini API ile Metin Yanıtı
+    async function getGeminiResponse(prompt) {
+        const payload = {
+            contents: chatHistory.map(item => ({
+                role: item.role,
+                parts: [{ text: item.parts[0].text || prompt }]
+            }))
+        };
         try {
-            const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
+            if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_GEMINI_API_ANAHTARIN') {
+                throw new Error(translations[currentLang].api_fail_error("API Anahtarı ayarlanmamış veya geçersiz."));
+            }
+            const response = await fetch(GEMINI_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`);
+            }
             const data = await response.json();
-            return data.AbstractText || data.RelatedTopics?.map(t => t.Text).join(' | ') || translations[currentLang].api_fail_generic;
+            if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+                return data.candidates[0].content.parts[0].text;
+            } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+                return translations[currentLang].content_blocked(data.promptFeedback.blockReason);
+            }
+            return translations[currentLang].api_fail_generic;
         } catch (error) {
-            console.error('Web arama hatası:', error);
+            console.error('Gemini API hatası:', error);
             return translations[currentLang].api_fail_error(error.message);
         }
     }
-
-    async function getGeminiThinkResponse(prompt) {
-    const payload = {
-        contents: [{
-            role: 'user',
-            parts: [{ text: prompt + ' (Detaylı analiz yap.)' }]
-        }]
-    };
-    try {
-        const response = await fetch(GEMINI_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        return data.candidates?.[0]?.content?.parts?.[0]?.text || translations[currentLang].api_fail_generic;
-    } catch (error) {
-        console.error('Gemini Think hatası:', error);
-        return translations[currentLang].api_fail_error(error.message);
-    }
-}
 
     // --- Mesaj Gönderme Ana Mantığı ---
     function sendMessage() {
         if (!userInput) return;
         const messageText = userInput.value.trim();
-        if (messageText !== "") {
-            addMessage(messageText, 'user');
-            userInput.value = '';
-
-            // === ÖNCE KOMUT KONTROLÜ ===
-            if (messageText.startsWith('/')) {
-                const parts = messageText.substring(1).toLowerCase().trim().split(' ');
-                const command = parts[0];
-                const args = parts.slice(1);
-                let commandHandled = true;
-                switch (command) {
-                    case 'help':
-                        addMessage(translations[currentLang].help_text, 'model');
-                        break;
-                    case 'sponsors':
-                        addMessage(translations[currentLang].sponsor_list_text, 'model');
-                        break;
-                    case 'rewards':
-                        addMessage(translations[currentLang].rewards_text, 'model');
-                        break;
-                    case 'myinfo':
-                        let cTkM = loadData(TK_MILES_KEY);
-                        let cMvG = loadData(MAVI_GSM_KEY);
-                        let cCsI = loadData(CARREFOURSA_INFO_KEY);
-                        let cSnN = loadData(SWISSAIR_NO_KEY);
-                        let cCeE = loadData(CARREFOUR_EU_KEY);
-                        let cTgG = loadData(TIKTAK_GSM_KEY);
-                        let cTeE = loadData(TRENDYOL_EMAIL_KEY);
-                        let info = translations[currentLang].my_info_title_basic + "\n";
-                        info += `${translations[currentLang].my_info_name} ${currentUserName || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_platform} ${currentSocialMedia || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_username} ${currentSocialUser || translations[currentLang].not_registered_short}\n`;
-                        info += translations[currentLang].my_info_title_sponsor + "\n";
-                        info += `${translations[currentLang].my_info_sponsor_tk} ${cTkM || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_sponsor_mavi} ${cMvG || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_sponsor_csa} ${cCsI || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_sponsor_swiss} ${cSnN || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_sponsor_ceu} ${cCeE || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_sponsor_tiktak} ${cTgG || translations[currentLang].not_registered_short}\n`;
-                        info += `${translations[currentLang].my_info_sponsor_trendyol} ${cTeE || translations[currentLang].not_registered_short}`;
-                        addMessage(info, 'model');
-                        break;
-                    case 'reset':
-                        addMessage(translations[currentLang].reset_confirm, 'model');
-                        conversationState = 'awaiting_reset_confirmation';
-                        break;
-                    case 'turkish':
-                        addMessage(translations[currentLang].prompt_tk, 'model');
-                        conversationState = 'awaiting_tk_no';
-                        break;
-                    case 'mavi':
-                        addMessage(translations[currentLang].prompt_mavi, 'model');
-                        conversationState = 'awaiting_mavi_gsm';
-                        break;
-                    case 'carrefoursa':
-                        addMessage(translations[currentLang].prompt_carrefoursa, 'model');
-                        conversationState = 'awaiting_carrefoursa_info';
-                        break;
-                    case 'swiss':
-                        addMessage(translations[currentLang].prompt_swissair, 'model');
-                        conversationState = 'awaiting_swissair_no';
-                        break;
-                    case 'carrefour_eu':
-                        addMessage(translations[currentLang].prompt_carrefour_eu, 'model');
-                        conversationState = 'awaiting_carrefour_eu';
-                        break;
-                    case 'tiktak':
-                        addMessage(translations[currentLang].prompt_tiktak, 'model');
-                        conversationState = 'awaiting_tiktak_gsm';
-                        break;
-                    case 'trendyol':
-                        addMessage(translations[currentLang].prompt_trendyol, 'model');
-                        conversationState = 'awaiting_trendyol_email';
-                        break;
-                    case 'csa_algida':
-                        addMessage(translations[currentLang].prompt_csa_algida, 'model');
-                        conversationState = 'awaiting_carrefour_no';
-                        break;
-                    case 'lang':
-                        if (args.length > 0 && (args[0] === 'en' || args[0] === 'tr')) {
-                            currentLang = args[0];
-                            saveData(LANG_KEY, currentLang);
-                            addMessage(currentLang === 'en' ? translations.en.lang_set_en : translations.tr.lang_set_tr, 'model');
-                            updateStaticTexts();
-                            if (conversationState === 'awaiting_name') addMessage(translations[currentLang].ask_name, 'model', 100);
-                            else if (conversationState === 'awaiting_social') addMessage(translations[currentLang].ask_social(currentUserName), 'model', 100);
-                            else if (conversationState === 'awaiting_username') addMessage(translations[currentLang].ask_username(currentSocialMedia), 'model', 100);
-                        } else {
-                            addMessage(translations[currentLang].lang_fail, 'model');
-                        }
-                        break;
-                    case 'upload':
-                        uploadButton.click();
-                        break;
-                    case 'filter':
-                        if (previewImg.src) filterButton.click();
-                        else addMessage(translations[currentLang].no_image, 'model');
-                        break;
-                    default:
-                        addMessage(translations[currentLang].unknown_command(command), 'model');
-                        commandHandled = false;
-                }
-                if (commandHandled) return;
+        if (messageText !== "" || pendingImage) {
+            if (messageText) {
+                addMessage(messageText, 'user');
+                userInput.value = '';
             }
-            // === KOMUT KONTROLÜ BİTTİ ===
 
-            // --- State Handling ---
-            else if (conversationState === 'awaiting_name') {
-                currentUserName = messageText;
-                saveData(USER_NAME_KEY, currentUserName);
-                addMessage(translations[currentLang].ask_social(currentUserName), 'model', 100);
-                conversationState = 'awaiting_social';
-            } else if (conversationState === 'awaiting_social') {
-                const lci = messageText.toLowerCase();
-                if (allowedSocialMedia.includes(lci)) {
-                    currentSocialMedia = lci;
-                    saveData(SOCIAL_MEDIA_KEY, currentSocialMedia);
-                    addMessage(translations[currentLang].ask_username(currentSocialMedia), 'model', 100);
-                    conversationState = 'awaiting_username';
+            // Eğer bir fotoğraf varsa, bunu zaten sendPhotoButton ile gönderiyoruz
+            if (!pendingImage) {
+                // Komut kontrolü veya normal sohbet
+                if (messageText.startsWith('/')) {
+                    handleCommand(messageText);
                 } else {
-                    addMessage(translations[currentLang].prompt_social, 'model');
-                }
-            } else if (conversationState === 'awaiting_username') {
-                currentSocialUser = messageText;
-                saveData(SOCIAL_USER_KEY, currentSocialUser);
-                addMessage(translations[currentLang].onboarding_complete(currentUserName), 'model');
-                addMessage(translations[currentLang].welcome_back(currentUserName), 'model', 100);
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_reset_confirmation') {
-                const lci = messageText.toLowerCase();
-                if (lci === 'evet' || lci === 'yes') {
-                    removeData(USER_NAME_KEY);
-                    removeData(SOCIAL_MEDIA_KEY);
-                    removeData(SOCIAL_USER_KEY);
-                    removeAllSponsorData();
-                    currentUserName = null;
-                    currentSocialMedia = null;
-                    currentSocialUser = null;
-                    addMessage(translations[currentLang].reset_done, 'model');
-                    conversationState = 'idle';
-                    setTimeout(startConversation, 800);
-                } else {
-                    addMessage(translations[currentLang].reset_cancel, 'model');
-                    conversationState = 'idle';
-                }
-            } else if (conversationState === 'awaiting_tk_no') {
-                const tkNo = messageText;
-                saveData(TK_MILES_KEY, tkNo);
-                addMessage(translations[currentLang].confirm_tk(tkNo), 'model');
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_mavi_gsm') {
-                const maviGsm = messageText;
-                saveData(MAVI_GSM_KEY, maviGsm);
-                addMessage(translations[currentLang].confirm_mavi(maviGsm), 'model');
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_carrefoursa_info') {
-                const csInfo = messageText;
-                saveData(CARREFOURSA_INFO_KEY, csInfo);
-                addMessage(translations[currentLang].confirm_carrefoursa(csInfo), 'model');
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_swissair_no') {
-                const swissNo = messageText;
-                saveData(SWISSAIR_NO_KEY, swissNo);
-                addMessage(translations[currentLang].confirm_swissair(swissNo), 'model');
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_carrefour_eu') {
-                const cEuNo = messageText;
-                saveData(CARREFOUR_EU_KEY, cEuNo);
-                addMessage(translations[currentLang].confirm_carrefour_eu(cEuNo), 'model');
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_tiktak_gsm') {
-                const tiktakGsm = messageText;
-                saveData(TIKTAK_GSM_KEY, tiktakGsm);
-                addMessage(translations[currentLang].confirm_tiktak(tiktakGsm), 'model');
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_trendyol_email') {
-                const trendyolMail = messageText;
-                saveData(TRENDYOL_EMAIL_KEY, trendyolMail);
-                addMessage(translations[currentLang].confirm_trendyol(trendyolMail), 'model');
-                conversationState = 'idle';
-            } else if (conversationState === 'awaiting_carrefour_no') {
-                const enteredNumber = messageText;
-                saveData(CSA_ALGIDA_KEY, enteredNumber);
-                addMessage(translations[currentLang].confirm_csa_algida(enteredNumber), 'model');
-                conversationState = 'idle';
-            }
-            // --- State Handling Bitti ---
-
-            // Eğer 'idle' durumundaysak ve mesaj komut veya state'e özel değilse, selamlaşma veya API
-            else if (conversationState === 'idle') {
-                const lowerCaseInput = messageText.toLowerCase();
-                let greetingHandled = true;
-                if (lowerCaseInput === 'merhaba' || lowerCaseInput === 'selam' || lowerCaseInput === 'hello' || lowerCaseInput === 'hi') {
-                    addMessage(translations[currentLang].greeting_hello(currentUserName), 'model');
-                } else if (lowerCaseInput === 'naber' || lowerCaseInput === 'nasılsın' || lowerCaseInput.includes('how are you')) {
-                    addMessage(translations[currentLang].greeting_how_are_you, 'model');
-                } else {
-                    greetingHandled = false;
-                }
-
-                if (!greetingHandled) {
-                    if (GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_API_ANAHTARIN_BURAYA') {
-                        getGeminiResponse();
-                    } else {
-                        addMessage(translations[currentLang].generic_replies[Math.floor(Math.random() * translations[currentLang].generic_replies.length)], 'model');
-                    }
+                    handleConversation(messageText);
                 }
             }
         }
     }
 
-    // --- Gemini API Fonksiyonu ---
-    async function getGeminiResponse() {
-    if (chatHistory.length === 0 || chatHistory[chatHistory.length - 1].role !== 'user') return;
-    addMessage("...", 'model');
-    const thinkingMessageElement = chatBox.lastElementChild;
-
-    // chatHistory'den imageSrc'yi çıkararak yeni bir payload oluştur
-    const filteredHistory = chatHistory.map(item => ({
-        role: item.role,
-        parts: item.parts.map(part => ({
-            text: part.text // Sadece text alanını al, imageSrc'yi dışarıda bırak
-        }))
-    }));
-
-    const payload = { contents: filteredHistory };
-    try {
-        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_API_ANAHTARIN_BURAYA') {
-            throw new Error(translations[currentLang].api_fail_error("API Anahtarı ayarlanmamış veya geçersiz."));
+    function handleCommand(messageText) {
+        const parts = messageText.substring(1).toLowerCase().trim().split(' ');
+        const command = parts[0];
+        const args = parts.slice(1);
+        let commandHandled = true;
+        switch (command) {
+            case 'help':
+                addMessage(translations[currentLang].help_text, 'model');
+                break;
+            case 'sponsors':
+                addMessage(translations[currentLang].sponsor_list_text, 'model');
+                break;
+            case 'rewards':
+                addMessage(translations[currentLang].rewards_text, 'model');
+                break;
+            case 'myinfo':
+                let cTkM = loadData(TK_MILES_KEY);
+                let cMvG = loadData(MAVI_GSM_KEY);
+                let cCsI = loadData(CARREFOURSA_INFO_KEY);
+                let cSnN = loadData(SWISSAIR_NO_KEY);
+                let cCeE = loadData(CARREFOUR_EU_KEY);
+                let cTgG = loadData(TIKTAK_GSM_KEY);
+                let cTeE = loadData(TRENDYOL_EMAIL_KEY);
+                let info = translations[currentLang].my_info_title_basic + "\n";
+                info += `${translations[currentLang].my_info_name} ${currentUserName || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_platform} ${currentSocialMedia || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_username} ${currentSocialUser || translations[currentLang].not_registered_short}\n`;
+                info += translations[currentLang].my_info_title_sponsor + "\n";
+                info += `${translations[currentLang].my_info_sponsor_tk} ${cTkM || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_sponsor_mavi} ${cMvG || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_sponsor_csa} ${cCsI || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_sponsor_swiss} ${cSnN || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_sponsor_ceu} ${cCeE || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_sponsor_tiktak} ${cTgG || translations[currentLang].not_registered_short}\n`;
+                info += `${translations[currentLang].my_info_sponsor_trendyol} ${cTeE || translations[currentLang].not_registered_short}`;
+                addMessage(info, 'model');
+                break;
+            case 'reset':
+                addMessage(translations[currentLang].reset_confirm, 'model');
+                conversationState = 'awaiting_reset_confirmation';
+                break;
+            case 'turkish':
+                addMessage(translations[currentLang].prompt_tk, 'model');
+                conversationState = 'awaiting_tk_no';
+                break;
+            case 'mavi':
+                addMessage(translations[currentLang].prompt_mavi, 'model');
+                conversationState = 'awaiting_mavi_gsm';
+                break;
+            case 'carrefoursa':
+                addMessage(translations[currentLang].prompt_carrefoursa, 'model');
+                conversationState = 'awaiting_carrefoursa_info';
+                break;
+            case 'swiss':
+                addMessage(translations[currentLang].prompt_swissair, 'model');
+                conversationState = 'awaiting_swissair_no';
+                break;
+            case 'carrefour_eu':
+                addMessage(translations[currentLang].prompt_carrefour_eu, 'model');
+                conversationState = 'awaiting_carrefour_eu';
+                break;
+            case 'tiktak':
+                addMessage(translations[currentLang].prompt_tiktak, 'model');
+                conversationState = 'awaiting_tiktak_gsm';
+                break;
+            case 'trendyol':
+                addMessage(translations[currentLang].prompt_trendyol, 'model');
+                conversationState = 'awaiting_trendyol_email';
+                break;
+            case 'csa_algida':
+                addMessage(translations[currentLang].prompt_csa_algida, 'model');
+                conversationState = 'awaiting_carrefour_no';
+                break;
+            case 'lang':
+                if (args.length > 0 && (args[0] === 'en' || args[0] === 'tr')) {
+                    currentLang = args[0];
+                    saveData(LANG_KEY, currentLang);
+                    addMessage(currentLang === 'en' ? translations.en.lang_set_en : translations.tr.lang_set_tr, 'model');
+                    updateStaticTexts();
+                    if (conversationState === 'awaiting_name') addMessage(translations[currentLang].ask_name, 'model', 100);
+                    else if (conversationState === 'awaiting_social') addMessage(translations[currentLang].ask_social(currentUserName), 'model', 100);
+                    else if (conversationState === 'awaiting_username') addMessage(translations[currentLang].ask_username(currentSocialMedia), 'model', 100);
+                } else {
+                    addMessage(translations[currentLang].lang_fail, 'model');
+                }
+                break;
+            case 'upload':
+                uploadButton.click();
+                break;
+            case 'filter':
+                if (previewImg.src) filterButton.click();
+                else addMessage(translations[currentLang].no_image, 'model');
+                break;
+            default:
+                addMessage(translations[currentLang].unknown_command(command), 'model');
+                commandHandled = false;
         }
-        const response = await fetch(GEMINI_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`API Hatası: ${response.status} - ${errorData?.error?.message || response.statusText}`);
-        }
-        const data = await response.json();
-        let botReply = translations[currentLang].api_fail_generic;
-        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
-            botReply = data.candidates[0].content.parts[0].text;
-        } else if (data.promptFeedback && data.promptFeedback.blockReason) {
-            botReply = translations[currentLang].content_blocked(data.promptFeedback.blockReason);
-            console.error("API İçerik Engeli:", data.promptFeedback);
-        }
-        if (thinkingMessageElement && thinkingMessageElement.classList.contains('bot-message') && thinkingMessageElement.textContent.startsWith("...")) {
-            thinkingMessageElement.remove();
-        }
-        addMessage(botReply, 'model');
-    } catch (error) {
-        console.error("Gemini API isteği başarısız:", error);
-        if (thinkingMessageElement && thinkingMessageElement.classList.contains('bot-message') && thinkingMessageElement.textContent.startsWith("...")) {
-            thinkingMessageElement.remove();
-        }
-        addMessage(translations[currentLang].api_fail_error(error.message), 'model');
+        if (commandHandled) return;
     }
-}
+
+    function handleConversation(messageText) {
+        if (conversationState === 'awaiting_name') {
+            currentUserName = messageText;
+            saveData(USER_NAME_KEY, currentUserName);
+            addMessage(translations[currentLang].ask_social(currentUserName), 'model', 100);
+            conversationState = 'awaiting_social';
+        } else if (conversationState === 'awaiting_social') {
+            const lci = messageText.toLowerCase();
+            if (allowedSocialMedia.includes(lci)) {
+                currentSocialMedia = lci;
+                saveData(SOCIAL_MEDIA_KEY, currentSocialMedia);
+                addMessage(translations[currentLang].ask_username(currentSocialMedia), 'model', 100);
+                conversationState = 'awaiting_username';
+            } else {
+                addMessage(translations[currentLang].prompt_social, 'model');
+            }
+        } else if (conversationState === 'awaiting_username') {
+            currentSocialUser = messageText;
+            saveData(SOCIAL_USER_KEY, currentSocialUser);
+            addMessage(translations[currentLang].onboarding_complete(currentUserName), 'model');
+            addMessage(translations[currentLang].welcome_back(currentUserName), 'model', 100);
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_reset_confirmation') {
+            const lci = messageText.toLowerCase();
+            if (lci === 'evet' || lci === 'yes') {
+                removeData(USER_NAME_KEY);
+                removeData(SOCIAL_MEDIA_KEY);
+                removeData(SOCIAL_USER_KEY);
+                removeAllSponsorData();
+                currentUserName = null;
+                currentSocialMedia = null;
+                currentSocialUser = null;
+                addMessage(translations[currentLang].reset_done, 'model');
+                conversationState = 'idle';
+                setTimeout(startConversation, 800);
+            } else {
+                addMessage(translations[currentLang].reset_cancel, 'model');
+                conversationState = 'idle';
+            }
+        } else if (conversationState === 'awaiting_tk_no') {
+            const tkNo = messageText;
+            saveData(TK_MILES_KEY, tkNo);
+            addMessage(translations[currentLang].confirm_tk(tkNo), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_mavi_gsm') {
+            const maviGsm = messageText;
+            saveData(MAVI_GSM_KEY, maviGsm);
+            addMessage(translations[currentLang].confirm_mavi(maviGsm), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_carrefoursa_info') {
+            const csInfo = messageText;
+            saveData(CARREFOURSA_INFO_KEY, csInfo);
+            addMessage(translations[currentLang].confirm_carrefoursa(csInfo), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_swissair_no') {
+            const swissNo = messageText;
+            saveData(SWISSAIR_NO_KEY, swissNo);
+            addMessage(translations[currentLang].confirm_swissair(swissNo), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_carrefour_eu') {
+            const cEuNo = messageText;
+            saveData(CARREFOUR_EU_KEY, cEuNo);
+            addMessage(translations[currentLang].confirm_carrefour_eu(cEuNo), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_tiktak_gsm') {
+            const tiktakGsm = messageText;
+            saveData(TIKTAK_GSM_KEY, tiktakGsm);
+            addMessage(translations[currentLang].confirm_tiktak(tiktakGsm), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_trendyol_email') {
+            const trendyolMail = messageText;
+            saveData(TRENDYOL_EMAIL_KEY, trendyolMail);
+            addMessage(translations[currentLang].confirm_trendyol(trendyolMail), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'awaiting_carrefour_no') {
+            const enteredNumber = messageText;
+            saveData(CSA_ALGIDA_KEY, enteredNumber);
+            addMessage(translations[currentLang].confirm_csa_algida(enteredNumber), 'model');
+            conversationState = 'idle';
+        } else if (conversationState === 'idle') {
+            const lowerCaseInput = messageText.toLowerCase();
+            let greetingHandled = true;
+            if (lowerCaseInput === 'merhaba' || lowerCaseInput === 'selam' || lowerCaseInput === 'hello' || lowerCaseInput === 'hi') {
+                addMessage(translations[currentLang].greeting_hello(currentUserName), 'model');
+            } else if (lowerCaseInput === 'naber' || lowerCaseInput === 'nasılsın' || lowerCaseInput.includes('how are you')) {
+                addMessage(translations[currentLang].greeting_how_are_you, 'model');
+            } else {
+                greetingHandled = false;
+            }
+
+            if (!greetingHandled) {
+                if (GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_GEMINI_API_ANAHTARIN') {
+                    getGeminiResponse(messageText);
+                } else {
+                    addMessage(translations[currentLang].generic_replies[Math.floor(Math.random() * translations[currentLang].generic_replies.length)], 'model');
+                }
+            }
+        }
+    }
+
+    // Olay Dinleyicileri
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') sendMessage(); });
+    toggleTheme.addEventListener('click', () => {
+        isLightMode = !isLightMode;
+        applyTheme();
+    });
 
     // --- Konuşmayı Başlatma Fonksiyonu ---
     function startConversation() {
@@ -653,19 +645,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(scrollToBottom, 150);
     }
 
-    // Olay Dinleyicileri
-    sendButton.addEventListener('click', sendMessage);
-    userInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') sendMessage(); });
-    toggleTheme.addEventListener('click', () => {
-        isDarkMode = !isDarkMode;
-        applyTheme();
-    });
-
     // Başlangıç
     currentUserName = loadData(USER_NAME_KEY);
     currentSocialMedia = loadData(SOCIAL_MEDIA_KEY);
     currentSocialUser = loadData(SOCIAL_USER_KEY);
     currentLang = loadData(LANG_KEY) || 'tr';
     updateStaticTexts();
+    applyTheme();
     startConversation();
 });
