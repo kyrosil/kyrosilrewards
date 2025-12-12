@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // API Anahtarları (Kendi anahtarını ekle!)
-    const GEMINI_API_KEY = 'AIzaSyADFf7H5SjunAy53xgJcj2vUdviM50rC_4'; // Gemini için
-    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
+    const GEMINI_API_KEY = 'AIzaSyCswRwqfSstoiuZfhBYIB6imzM2eqHHNkc'; // Gemini için
+    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemma-3-1b:generateContent?key=" + GEMINI_API_KEY;
 
     // localStorage için anahtar (key) tanımları
     const USER_NAME_KEY = 'kyrosil_userName'; 
