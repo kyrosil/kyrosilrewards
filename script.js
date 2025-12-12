@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }]
         };
         try {
-            if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_GEMINI_API_ANAHTARIN') {
+            if (!GEMINI_API_KEY || GEMINI_API_KEY === 'AIzaSyBR7e9dr-fg3ClSvbhvSlxaSwAEHl5rwN0') {
                 throw new Error(translations[currentLang].api_fail_error("API key is not set or invalid."));
             }
             const response = await fetch(GEMINI_API_URL, {
@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }))
         };
         try {
-            if (!GEMINI_API_KEY || GEMINI_API_KEY === 'SENIN_GEMINI_API_ANAHTARIN') {
+            if (!GEMINI_API_KEY || GEMINI_API_KEY === 'AIzaSyBR7e9dr-fg3ClSvbhvSlxaSwAEHl5rwN0') {
                 throw new Error(translations[currentLang].api_fail_error("API key is not set or invalid."));
             }
             const response = await fetch(GEMINI_API_URL, {
@@ -724,7 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!greetingHandled) {
-                if (GEMINI_API_KEY && GEMINI_API_KEY !== 'SENIN_GEMINI_API_ANAHTARIN') {
+                if (GEMINI_API_KEY && GEMINI_API_KEY !== 'AIzaSyBR7e9dr-fg3ClSvbhvSlxaSwAEHl5rwN0') {
                     getGeminiResponse(messageText).then(response => {
                         addMessage(response || translations[currentLang].api_fail_generic, 'model');
                     });
